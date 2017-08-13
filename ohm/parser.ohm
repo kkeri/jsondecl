@@ -1,0 +1,104 @@
+
+Jsondecl {
+
+	// module
+
+	Module =
+		| Expression -- simple
+		| Import* Declaration* -- compound
+
+	Import =
+		| "import" "{" listOf<ImportItem, ","> "}" "from" string -- list
+
+	ImportItem =
+		| identifier -- simple
+
+	Declaration =
+		| "const" identifier "=" Expression -- const
+		| "export" "const" identifier "=" Expression -- export_const
+		| "export" "default" Expression -- export_default
+
+	// expressions
+
+	Expression = LogicalOr
+
+	LogicalOr = ListOf<LogicalAnd, "|">
+
+	LogicalAnd = ListOf<LogicalNot, "&">
+
+	LogicalNot = "!"* Primary
+
+	Primary =
+		| Literal
+		| Grouping
+		| ChainedCall
+
+	Literal =
+		| Object
+		| List
+		| number
+		| string
+		| regexp
+		| constant
+
+	Grouping = "(" Expression ")"
+
+	ChainedCall = ListOf<Call, ".">
+
+	Call = identifier ArgumentList?
+
+	Object (an object) = "{" ListOf<Property, ","> "}"
+
+	List (a list) = "[" ListOf<ListItem, ","> "]"
+
+	// helpers
+
+	ArgumentList = "(" ListOf<Expression, ","> ")"
+
+	Property (a property) = Expression ":" Expression
+
+	ListItem (a list item) = Expression
+
+	// lexical rules
+
+	space := "\t" | "\n" | "\r" | " " | comment
+	comment = multiLineComment | singleLineComment
+	multiLineComment = "/*" (~"*/" any)* "*/"
+	singleLineComment = "//" (~("\n" | "\r") any)*
+
+	identifier (an indentifier) = identifierStart identifierPart*
+	identifierStart = "A".."Z" | "a".."z" | "_"
+	identifierPart = identifierStart | digit
+
+	number (a number) = "-"? integerPart ("." fractionalPart)? exponentPart?
+	integerPart = positiveInteger | "0"
+	positiveInteger = nonZeroDigit digit*
+	fractionalPart = digit+
+	exponentPart = ("e" | "E") ("+" | "-")? digit+
+	nonZeroDigit = "1".."9"
+
+	string (a string) = "\"" stringCharacter* "\""
+	stringCharacter = normalChar | escapeSequence
+	normalChar = ~("\"" | "\\" | "\u0000".."\u001f") any
+	escapeSequence = "\\" escapeSpec
+	escapeSpec =
+		| "\""
+		| "\\"
+		| "\\/"
+		| "b"
+		| "f"
+		| "n"
+		| "r"
+		| "t"
+		| unicodeEscapeSpec
+	unicodeEscapeSpec = "u" hexDigit hexDigit hexDigit hexDigit
+
+	regexp (a regexp) = "/" regexpBody "/"
+	regexpBody = ("\\/" | ~"/" any)*
+
+	constant =
+		| "null" -- null
+		| "true" -- true
+		| "false" -- false
+}
+
