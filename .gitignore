@@ -60,5 +60,8 @@ typings/
 # vs code configuration
 .vscode
 
+# files for manually running the code
+try
+
 # local notes
 notes
