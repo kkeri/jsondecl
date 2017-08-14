@@ -1,11 +1,9 @@
 
-Jsondecl {
+JSONdecl {
 
 	// module
 
-	Module =
-		| Expression -- simple
-		| Import* Declaration* -- compound
+	Module = Import* Declaration+
 
 	Import =
 		| "import" "{" listOf<ImportItem, ","> "}" "from" string -- list
@@ -17,14 +15,15 @@ Jsondecl {
 		| "const" identifier "=" Expression -- const
 		| "export" "const" identifier "=" Expression -- export_const
 		| "export" "default" Expression -- export_default
+		| ~Declarator Expression -- export_default_auto
 
 	// expressions
 
 	Expression = LogicalOr
 
-	LogicalOr = ListOf<LogicalAnd, "|">
+	LogicalOr = NonemptyListOf<LogicalAnd, "|">
 
-	LogicalAnd = ListOf<LogicalNot, "&">
+	LogicalAnd = NonemptyListOf<LogicalNot, "&">
 
 	LogicalNot = "!"* Primary
 
@@ -35,7 +34,7 @@ Jsondecl {
 
 	Literal =
 		| Object
-		| List
+		| Array
 		| number
 		| string
 		| regexp
@@ -43,13 +42,13 @@ Jsondecl {
 
 	Grouping = "(" Expression ")"
 
-	ChainedCall = ListOf<Call, ".">
+	ChainedCall = NonemptyListOf<Call, ".">
 
 	Call = identifier ArgumentList?
 
 	Object (an object) = "{" ListOf<Property, ","> "}"
 
-	List (a list) = "[" ListOf<ListItem, ","> "]"
+	Array (an array) = "[" ListOf<ListItem, ","> "]"
 
 	// helpers
 
@@ -58,6 +57,8 @@ Jsondecl {
 	Property (a property) = Expression ":" Expression
 
 	ListItem (a list item) = Expression
+
+	Declarator = "import" | "export" | "const"
 
 	// lexical rules
 
