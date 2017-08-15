@@ -1,12 +1,24 @@
 
 export class Module {
-  constructor (imports, decls, value) {
-    this.imports = imports
-    this.decls = decls
-    this.value = value
+  constructor (importList, declList) {
+    this.importList = importList
+    this.declList = declList
+    this.decls = {}
+    this.exports = {}
+    this.defaultExport = undefined
   }
 
   compile (cc) {
+    cc.module = this
+    for (let import_ of this.importList) {
+      import_.compile(cc)
+    }
+    for (let decl of this.declList) {
+      decl.compile(cc)
+    }
+  }
+
+  addConst (id, expr, exported) {
 
   }
 }
@@ -15,6 +27,13 @@ export class Import {
   constructor (moduleSpec, importList) {
     this.moduleSpec = moduleSpec
     this.importList = importList
+  }
+}
+
+export class ImportItem {
+  constructor (origId, localId) {
+    this.origId = origId
+    this.localId = localId
   }
 }
 
@@ -35,10 +54,6 @@ export class Expression {
     }
   }
 
-  eval () {
-    throw new Error(`can't call abstract method`)
-  }
-
   match (value) {
     throw new Error(`can't call abstract method`)
   }
@@ -48,10 +63,6 @@ export class LogicalOr extends Expression {
   constructor (items) {
     super()
     this.items = items
-  }
-
-  eval () {
-    throw new Error(`invalid model: a logical operator can't be chained`)
   }
 
   match (value) {
@@ -74,10 +85,6 @@ export class LogicalAnd extends Expression {
     this.items = items
   }
 
-  eval () {
-    throw new Error(`invalid model: a logical operator can't be chained`)
-  }
-
   match (value) {
     for (let item of this.items) {
       if (!item.match(value)) {
@@ -96,10 +103,6 @@ export class ChainedCall extends Expression {
   constructor (calls) {
     super()
     this.calls = calls
-  }
-
-  eval () {
-    throw new Error(`invalid model: a ChainedCall can't be chained`)
   }
 
   match (value) {
@@ -259,7 +262,7 @@ export class Identifier extends Expression {
 export class Literal extends Expression {
   constructor (value) {
     super()
-    this.evaluable = false
+    this.value = value
   }
 
   eval () {
@@ -279,7 +282,10 @@ export class Regexp extends Expression {
   constructor (regexp) {
     super()
     this.regexp = regexp
-    this.evaluable = false
+  }
+
+  eval () {
+    return this.regexp
   }
 
   match (value) {

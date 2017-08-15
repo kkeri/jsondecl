@@ -35,14 +35,20 @@ const modelActions = {
 
   // module
 
-  Module (imports, decls) {
+  Module_short (imports, expr) {
+    return new model.Module(imports.model(), expr.model())
+  },
+  Module_long (imports, decls, expr) {
+    let declList = decls.asIteration().model()
+    let exprList = expr.asIteration().model()
+    if (exprList.length) declList.push(new model.Const('', expr[0], true))
     return new model.Module(imports.model(), decls.model())
   },
 
   // import
 
   Import_list (_imp_, _lbr_, items, _rbr_, _from_, moduleSpec) {
-    return new model.Import(moduleSpec.model(), items.model())
+    return new model.Import(moduleSpec.model(), items.asIteration().model())
   },
   ImportItem_simple (id) {
     return new model.ImportItem(id.model(), id.model())
@@ -59,17 +65,24 @@ const modelActions = {
   Declaration_export_default (_exp_, _def_, expr) {
     return new model.Const('', expr.model(), true)
   },
-  Declaration_export_default_auto (expr) {
-    return new model.Const('', expr.model(), true)
-  },
 
   // expression
 
   LogicalOr (list) {
-    return new model.LogicalOr(list.asIteration().model())
+    let items = list.asIteration().model()
+    if (items.length === 1) {
+      return items[0]
+    } else {
+      return new model.LogicalOr(items)
+    }
   },
   LogicalAnd (list) {
-    return new model.LogicalAnd(list.asIteration().model())
+    let items = list.asIteration().model()
+    if (items.length === 1) {
+      return items[0]
+    } else {
+      return new model.LogicalAnd(items)
+    }
   },
   LogicalNot (list, expr) {
     if (list.model().length % 2 === 1) {

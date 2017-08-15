@@ -3,10 +3,12 @@ JSONdecl {
 
 	// module
 
-	Module = Import* Declaration+
+	Module =
+		| Import* ~Declarator Expression -- short
+		| Import* Declaration+ ~Declarator Expression? -- long
 
 	Import =
-		| "import" "{" listOf<ImportItem, ","> "}" "from" string -- list
+		| "import" "{" ListOf<ImportItem, ","> "}" "from" string -- list
 
 	ImportItem =
 		| identifier -- simple
@@ -15,7 +17,6 @@ JSONdecl {
 		| "const" identifier "=" Expression -- const
 		| "export" "const" identifier "=" Expression -- export_const
 		| "export" "default" Expression -- export_default
-		| ~Declarator Expression -- export_default_auto
 
 	// expressions
 
