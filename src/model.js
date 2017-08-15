@@ -7,20 +7,6 @@ export class Module {
     this.exports = {}
     this.defaultExport = undefined
   }
-
-  compile (cc) {
-    cc.module = this
-    for (let import_ of this.importList) {
-      import_.compile(cc)
-    }
-    for (let decl of this.declList) {
-      decl.compile(cc)
-    }
-  }
-
-  addConst (id, expr, exported) {
-
-  }
 }
 
 export class Import {
@@ -73,10 +59,6 @@ export class LogicalOr extends Expression {
     }
     return false
   }
-
-  bind (module) {
-
-  }
 }
 
 export class LogicalAnd extends Expression {
@@ -93,10 +75,6 @@ export class LogicalAnd extends Expression {
     }
     return true
   }
-
-  bind (module) {
-
-  }
 }
 
 export class ChainedCall extends Expression {
@@ -111,10 +89,6 @@ export class ChainedCall extends Expression {
       value = this.calls[i].eval(value)
     }
     return this.calls[max].validate(value)
-  }
-
-  bind (module) {
-
   }
 }
 
@@ -132,10 +106,6 @@ export class Call extends Expression {
   match (value) {
     this.source.eval()
   }
-
-  bind (module) {
-
-  }
 }
 
 export class NativeCall extends Expression {
@@ -151,10 +121,6 @@ export class NativeCall extends Expression {
 
   match (value) {
     this.source.eval()
-  }
-
-  bind (module) {
-
   }
 }
 
@@ -193,10 +159,6 @@ export class Object_ extends Expression {
     }
     return true
   }
-
-  bind (module) {
-
-  }
 }
 
 export class Array_ extends Expression {
@@ -220,10 +182,6 @@ export class Array_ extends Expression {
       }
     }
     return true
-  }
-
-  bind (module) {
-
   }
 }
 
@@ -272,10 +230,6 @@ export class Literal extends Expression {
   match (value) {
     return this.value === value
   }
-
-  bind () {
-    return this
-  }
 }
 
 export class Regexp extends Expression {
@@ -290,9 +244,5 @@ export class Regexp extends Expression {
 
   match (value) {
     return this.regexp.test(value)
-  }
-
-  bind () {
-    return this
   }
 }
