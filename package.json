@@ -10,7 +10,7 @@
     "build-ohm": "node ohm/build",
     "watch": "concurrently --names \"ohm,babel\" -p \"[{name}]\" -c cyan,magenta \"npm run watch-ohm\" \"npm run watch-babel\"",
     "watch-babel": "babel --presets=es2015 src --out-dir lib --source-maps --watch",
-    "watch-ohm": "watch-run -p ohm/parser.ohm node ohm/build"
+    "watch-ohm": "watch-run -i -p ohm/parser.ohm node ohm/build"
   },
   "precommit": [
     "build",
