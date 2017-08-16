@@ -1,1 +1,1 @@
-{"version":3,"sources":["../src/index.js"],"names":["compile"],"mappings":";;;;;;;;;;;qBAASA,O","file":"index.js","sourcesContent":["export { compile } from './compiler'\r\n"]}
+{"version":3,"sources":["../src/index.js"],"names":["compile"],"mappings":";;;;;;;;;;;qBAASA,O","file":"index.js","sourcesContent":["export { compile } from './compiler'\n"]}

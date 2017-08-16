@@ -13,10 +13,57 @@ class CompilerContext {
     this.module = module
     this.opts = opts
     this.errors = 0
+    this.envStack = []
+    this.currentBlock = undefined
   }
 
-  compile (node) {
-    return methods[node.constructor.name](this)
+  enter (block) {
+    this.envStack.push(this.currentBlock)
+    this.currentBlock = block
+  }
+
+  leave () {
+    this.currentBlock = this.envStack.pop()
+  }
+
+  lookup (id) {
+    let decl = this.currentBlock.decls[id]
+    if (!decl) {
+      this.error(`${id}: undeclared identifier`)
+    } else {
+      return decl
+    }
+  }
+
+  declare (id, expr, exported) {
+    if (!id) {
+      if (this.module.defaultExport) {
+        this.error(`duplicate default export`)
+      } else {
+        this.module.defaultExport = expr
+      }
+    } else if (id in this.currentBlock.decls) {
+      this.error(`${id}: duplicate identifier`)
+    } else {
+      this.currentBlock.decls[id] = expr
+      if (exported) {
+        this.module.exports[id] = expr
+      }
+    }
+  }
+
+  buildScope (node) {
+    let method = buildScope[node.constructor.name]
+    if (method) method.call(node, this)
+  }
+
+  bind (node) {
+    let method = bind[node.constructor.name]
+    if (method) {
+      return method.call(node, this)
+    } else {
+      return node
+    }
   }
 
   compileImportExpression (expr) {
@@ -28,28 +75,66 @@ class CompilerContext {
     this.errors++
     this.opts.error && this.opts.error(msg)
   }
+}
 
-  declare (id, expr, exported) {
-    if (id in this.module.decls) {
-      this.error(`${id}: duplicate identifier`)
-    } else {
-      this.module.decls[id] = expr
-      if (exported) {
-        this.module.exports[id] = expr
+const buildScope = {
+
+  Module (cc) {
+    cc.enter(this.decls)
+    for (let import_ of this.importList) {
+      cc.buildScope(import_)
+    }
+    for (let decl of this.declList) {
+      cc.buildScope(decl)
+    }
+    cc.leave()
+  },
+
+  Import (cc) {
+    const module = require(this.moduleSpec)
+    for (let item of this.importList) {
+      if (item.origId in module) {
+        cc.declare(item.localId, cc.compileImportExpression(module[item.origId]))
+      } else {
+        cc.error(`${item.origId}: identifier not defined in module ` +
+          `'${this.moduleSpec}'`)
       }
     }
+  },
+
+  Const (cc) {
+    cc.declare(this.id, this, this.exported)
+    cc.buildScope(this.value)
+  },
+
+  LogicalOr (cc) {
+    this.items.forEach(i => cc.buildScope(i))
+  },
+
+  LogicalAnd (cc) {
+    this.items.forEach(i => cc.buildScope(i))
+  },
+
+  ChainedCall (cc) {
+    this.calls.forEach(i => cc.buildScope(i))
+  },
+
+  Call (cc) {
+    this.args.forEach(i => cc.buildScope(i))
   }
 }
 
-const methods = {
+const bind = {
 
   Module (cc) {
+    cc.enter(this.decls)
     for (let import_ of this.importList) {
-      import_.compile(cc)
+      cc.buildScope(import_)
     }
     for (let decl of this.declList) {
-      decl.compile(cc)
+      decl.buildScope(cc)
     }
+    cc.leave()
     return this
   },
 
@@ -59,7 +144,8 @@ const methods = {
       if (item.origId in module) {
         cc.declare(item.localId, cc.compileImportExpression(module[item.origId]))
       } else {
-        cc.error(`${item.origId}: identifier not defined in module '${this.moduleSpec}`)
+        cc.error(`${item.origId}: identifier not defined in module ` +
+          `'${this.moduleSpec}'`)
       }
     }
   },
@@ -79,6 +165,11 @@ const methods = {
   },
 
   ChainedCall (cc) {
+    this.calls = this.calls.map(i => cc.compile(i))
+    return this
+  },
+
+  Call (cc) {
     this.calls = this.calls.map(i => cc.compile(i))
     return this
   }
