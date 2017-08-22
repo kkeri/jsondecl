@@ -6,12 +6,13 @@ import * as model from './model'
 var parser
 var semantics
 
-export function parse (str) {
+export function parse (str, opts = {}) {
   if (!parser) {
     initParser()
   }
   let mr = parser.match(str)
   if (mr.failed()) {
+    if (opts.error) opts.error(mr.message)
     return null
   } else {
     return semantics(mr).model()
@@ -36,13 +37,14 @@ const modelActions = {
   // module
 
   Module_short (imports, expr) {
-    return new model.Module(imports.model(), expr.model())
+    return new model.Module(imports.model(),
+      [new model.Const('', expr.model(), true)])
   },
   Module_long (imports, decls, expr) {
-    let declList = decls.asIteration().model()
-    let exprList = expr.asIteration().model()
+    let declList = decls.model()
+    let exprList = expr.model()
     if (exprList.length) declList.push(new model.Const('', expr[0], true))
-    return new model.Module(imports.model(), decls.model())
+    return new model.Module(imports.model(), declList)
   },
 
   // import
@@ -94,8 +96,13 @@ const modelActions = {
   Grouping (_lp_, expr, _rp_) {
     return expr.model()
   },
-  ChainedCall (calls) {
-    return new model.ChainedCall(calls.asIteration().model())
+  ChainedCall (list) {
+    let calls = list.asIteration().model()
+    if (calls.length === 1) {
+      return calls[0]
+    } else {
+      return new model.ChainedCall(calls)
+    }
   },
   Call (id, argsOpt) {
     argsOpt = argsOpt.model()
@@ -107,6 +114,9 @@ const modelActions = {
   },
   Array (_lb_, items, _rb_) {
     return new model.Array_(items.asIteration().model())
+  },
+  String (str) {
+    return new model.Literal(str.model())
   },
 
   // helpers
@@ -121,13 +131,13 @@ const modelActions = {
   // lexical rules
 
   identifier (start, rest) {
-    return new model.Identifier(this.source.contents)
+    return this.source.contents
   },
   number (sign, int, _point_, frac, exp) {
     return new model.Literal(parseFloat(this.source.contents))
   },
   string (quote1, chars, quote2) {
-    return new model.Literal(chars.source.contents)
+    return chars.source.contents
   },
   regexp (slash1, body, slash2) {
     return new model.RegExp(new RegExp(body.source.contents))

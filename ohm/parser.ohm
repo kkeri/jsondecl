@@ -37,7 +37,7 @@ JSONdecl {
 		| Object
 		| Array
 		| number
-		| string
+		| String
 		| regexp
 		| constant
 
@@ -50,6 +50,8 @@ JSONdecl {
 	Object (an object) = "{" ListOf<Property, ","> "}"
 
 	Array (an array) = "[" ListOf<ListItem, ","> "]"
+
+	String = string
 
 	// helpers
 
@@ -95,7 +97,7 @@ JSONdecl {
 		| unicodeEscapeSpec
 	unicodeEscapeSpec = "u" hexDigit hexDigit hexDigit hexDigit
 
-	regexp (a regexp) = "/" regexpBody "/"
+	regexp (a regular expression) = "/" regexpBody "/"
 	regexpBody = ("\\/" | ~"/" any)*
 
 	constant =

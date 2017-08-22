@@ -1,11 +1,20 @@
 import { parse } from './parser'
+import { dirname, join } from 'path'
 
 export function compile (str, opts = {}) {
-  const module = parse(str)
+  const module = parse(str, {
+    error: opts.error
+  })
   if (!module) return null
-  const cc = new CompilerContext(module, opts)
-  cc.compile(module)
-  return cc.errors === 0 ? module : null
+  const cc = new CompilerContext(module, {
+    error: opts.error || function () {},
+    importPath: dirname(opts.filename)
+  })
+  cc.buildBlock(module)
+  if (cc.errors) return null
+  cc.bind(module)
+  if (cc.errors) return null
+  return module
 }
 
 class CompilerContext {
@@ -28,10 +37,10 @@ class CompilerContext {
 
   lookup (id) {
     let decl = this.currentBlock.decls[id]
-    if (!decl) {
-      this.error(`${id}: undeclared identifier`)
+    if (decl) {
+      return decl.body
     } else {
-      return decl
+      this.error(`${id}: undeclared identifier`)
     }
   }
 
@@ -52,18 +61,14 @@ class CompilerContext {
     }
   }
 
-  buildScope (node) {
-    let method = buildScope[node.constructor.name]
+  buildBlock (node) {
+    let method = buildBlock[node.constructor.name]
     if (method) method.call(node, this)
   }
 
   bind (node) {
     let method = bind[node.constructor.name]
-    if (method) {
-      return method.call(node, this)
-    } else {
-      return node
-    }
+    if (method) method.call(node, this)
   }
 
   compileImportExpression (expr) {
@@ -73,30 +78,35 @@ class CompilerContext {
 
   error (msg) {
     this.errors++
-    this.opts.error && this.opts.error(msg)
+    this.opts.error(msg)
   }
 }
 
-const buildScope = {
+const buildBlock = {
 
   Module (cc) {
-    cc.enter(this.decls)
+    cc.enter(this)
     for (let import_ of this.importList) {
-      cc.buildScope(import_)
+      cc.buildBlock(import_)
     }
     for (let decl of this.declList) {
-      cc.buildScope(decl)
+      cc.buildBlock(decl)
     }
     cc.leave()
   },
 
   Import (cc) {
-    const module = require(this.moduleSpec)
+    if (!cc.opts.importPath) {
+      cc.error(`using import requires the 'importPath' option`)
+      return
+    }
+    const donor = require(join(cc.opts.importPath, this.moduleSpec))
     for (let item of this.importList) {
-      if (item.origId in module) {
-        cc.declare(item.localId, cc.compileImportExpression(module[item.origId]))
+      if (item.originalId in donor) {
+        cc.declare(item.localId,
+          cc.compileImportExpression(donor[item.originalId]))
       } else {
-        cc.error(`${item.origId}: identifier not defined in module ` +
+        cc.error(`${item.originalId}: identifier not defined in module ` +
           `'${this.moduleSpec}'`)
       }
     }
@@ -104,73 +114,68 @@ const buildScope = {
 
   Const (cc) {
     cc.declare(this.id, this, this.exported)
-    cc.buildScope(this.value)
+    cc.buildBlock(this.body)
   },
 
   LogicalOr (cc) {
-    this.items.forEach(i => cc.buildScope(i))
+    this.items.forEach(i => cc.buildBlock(i))
   },
 
   LogicalAnd (cc) {
-    this.items.forEach(i => cc.buildScope(i))
+    this.items.forEach(i => cc.buildBlock(i))
   },
 
   ChainedCall (cc) {
-    this.calls.forEach(i => cc.buildScope(i))
+    this.calls.forEach(i => cc.buildBlock(i))
   },
 
   Call (cc) {
-    this.args.forEach(i => cc.buildScope(i))
+    this.args.forEach(i => cc.buildBlock(i))
   }
 }
 
 const bind = {
 
   Module (cc) {
-    cc.enter(this.decls)
-    for (let import_ of this.importList) {
-      cc.buildScope(import_)
-    }
+    cc.enter(this)
     for (let decl of this.declList) {
-      decl.buildScope(cc)
+      cc.bind(decl)
     }
     cc.leave()
-    return this
-  },
-
-  Import (cc) {
-    const module = require(this.moduleSpec)
-    for (let item of this.importList) {
-      if (item.origId in module) {
-        cc.declare(item.localId, cc.compileImportExpression(module[item.origId]))
-      } else {
-        cc.error(`${item.origId}: identifier not defined in module ` +
-          `'${this.moduleSpec}'`)
-      }
-    }
   },
 
   Const (cc) {
-    cc.declare(this.id, cc.compile(this.value), this.exported)
+    cc.bind(this.body)
+    return this
   },
 
   LogicalOr (cc) {
-    this.items = this.items.map(i => cc.compile(i))
-    return this
+    this.items.forEach(i => cc.bind(i))
   },
 
   LogicalAnd (cc) {
-    this.items = this.items.map(i => cc.compile(i))
-    return this
+    this.items.forEach(i => cc.bind(i))
   },
 
   ChainedCall (cc) {
-    this.calls = this.calls.map(i => cc.compile(i))
-    return this
+    this.calls.forEach(i => cc.bind(i))
   },
 
   Call (cc) {
-    this.calls = this.calls.map(i => cc.compile(i))
-    return this
+    this.func = cc.lookup(this.id)
+    this.args.forEach(i => cc.bind(i))
+  },
+
+  Object_ (cc) {
+    this.properties.forEach(i => cc.bind(i))
+  },
+
+  Array_ (cc) {
+    this.items.forEach(i => cc.bind(i))
+  },
+
+  Property (cc) {
+    cc.bind(this.name)
+    cc.bind(this.value)
   }
 }

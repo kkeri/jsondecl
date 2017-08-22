@@ -1,8 +1,70 @@
 'use strict'
 
 const test = require('tap').test
-const compile = require('../lib/index')
+const _compile = require('../lib/index').compile
+const model = require('../lib/model')
 
-test('', t => {
+function compile(str) {
+  return _compile(str, {
+    filename: __filename,
+    error: (str) => console.log(str)
+  })
+}
+
+test('simple value', t => {
+  t.match(compile('1'), {
+    defaultExport: {
+      body: {
+        value: 1
+      }
+    }
+  })
+  t.match(compile('"a"'), {
+    defaultExport: {
+      body: {
+        value: "a"
+      }
+    }
+  })
+  t.match(compile('true'), {
+    defaultExport: {
+      body: {
+        value: true
+      }
+    }
+  })
+  t.match(compile('false'), {
+    defaultExport: {
+      body: {
+        value: false
+      }
+    }
+  })
+  t.match(compile('null'), {
+    defaultExport: {
+      body: {
+        value: null
+      }
+    }
+  })
+  t.done()
+})
+
+test('import', t => {
+  t.match(compile('import { } from "module/test.js" 1'), {
+    decls: {
+    }
+  })
+  t.match(compile('import { a } from "module/test.js" 1'), {
+    decls: {
+      a: 3
+    }
+  })
+  t.match(compile('import { a, b } from "module/test.js" 1'), {
+    decls: {
+      a: 3,
+      b: 99
+    }
+  })
   t.done()
 })

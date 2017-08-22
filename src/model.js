@@ -17,16 +17,16 @@ export class Import {
 }
 
 export class ImportItem {
-  constructor (origId, localId) {
-    this.origId = origId
+  constructor (originalId, localId) {
+    this.originalId = originalId
     this.localId = localId
   }
 }
 
 export class Const {
-  constructor (id, value, exported) {
+  constructor (id, body, exported) {
     this.id = id
-    this.value = value
+    this.body = body
     this.exported = exported
   }
 }
@@ -101,22 +101,6 @@ export class Call extends Expression {
 
   eval () {
     return this.value
-  }
-
-  match (value) {
-    this.source.eval()
-  }
-}
-
-export class NativeCall extends Expression {
-  constructor (func, args) {
-    super()
-    this.func = func
-    this.args = args
-  }
-
-  eval () {
-    return this.func.eval()
   }
 
   match (value) {
@@ -205,17 +189,6 @@ export class ListItem extends Expression {
 }
 
 // leaf nodes
-
-export class Identifier extends Expression {
-  constructor (name) {
-    super()
-    this.name = name
-  }
-
-  bind () {
-    return this
-  }
-}
 
 export class Literal extends Expression {
   constructor (value) {
