@@ -43,7 +43,7 @@ const modelActions = {
   Module_long (imports, decls, expr) {
     let declList = decls.model()
     let exprList = expr.model()
-    if (exprList.length) declList.push(new model.Const('', expr[0], true))
+    if (exprList.length) declList.push(new model.Const('', exprList[0], true))
     return new model.Module(imports.model(), declList)
   },
 

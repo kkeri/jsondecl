@@ -101,3 +101,17 @@ test('valid import', t => {
   t.done()
 })
 
+test('invalid const', t => {
+  t.equal(parse('const'), null)
+  t.equal(parse('const 0'), null)
+  t.equal(parse('const = 0'), null)
+  t.done()
+})
+
+test('valid const', t => {
+  t.notEqual(parse('const a = 0'), null)
+  t.notEqual(parse('const b = "a"'), null)
+  t.done()
+})
+
+

@@ -14,6 +14,10 @@ export function compile (str, opts = {}) {
   if (cc.errors) return null
   cc.bind(module)
   if (cc.errors) return null
+  if (!cc.exports) {
+    cc.error(`the module should export at least one declaration`)
+    return null
+  }
   return module
 }
 
@@ -22,6 +26,7 @@ class CompilerContext {
     this.module = module
     this.opts = opts
     this.errors = 0
+    this.exports = 0
     this.envStack = []
     this.currentBlock = undefined
   }
@@ -50,6 +55,7 @@ class CompilerContext {
         this.error(`duplicate default export`)
       } else {
         this.module.defaultExport = expr
+        this.exports++
       }
     } else if (id in this.currentBlock.decls) {
       this.error(`${id}: duplicate identifier`)
@@ -57,6 +63,7 @@ class CompilerContext {
       this.currentBlock.decls[id] = expr
       if (exported) {
         this.module.exports[id] = expr
+        this.exports++
       }
     }
   }
@@ -100,7 +107,16 @@ const buildBlock = {
       cc.error(`using import requires the 'importPath' option`)
       return
     }
-    const donor = require(join(cc.opts.importPath, this.moduleSpec))
+    const modulePath = join(cc.opts.importPath, this.moduleSpec)
+    let donor
+    try {
+      donor = require(modulePath)
+    } catch (e) {
+      if (e.code === 'MODULE_NOT_FOUND') {
+        cc.error(e.message)
+        return
+      }
+    }
     for (let item of this.importList) {
       if (item.originalId in donor) {
         cc.declare(item.localId,

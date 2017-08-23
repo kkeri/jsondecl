@@ -50,6 +50,18 @@ test('simple value', t => {
   t.done()
 })
 
+test('identifier', t => {
+  t.match(compile('a'), null)
+  t.match(compile('const a = 1 a'), {
+    defaultExport: {
+      body: {
+        func: { value: 1 }
+      }
+    }
+  })
+  t.done()
+})
+
 test('import', t => {
   t.match(compile('import { } from "module/test.js" 1'), {
     decls: {
@@ -66,5 +78,80 @@ test('import', t => {
       b: 99
     }
   })
+  t.match(compile('import { a } from "module/nofile.js" 1'), null)
+  t.done()
+})
+
+test('const', t => {
+  t.match(compile('export const a = 1'), {
+    decls: {
+      a: {
+        body: {
+          value: 1
+        }
+      }
+    },
+    exports: {
+      a: {
+        body: {
+          value: 1
+        }
+      }
+    },
+    defaultExport: null
+  })
+  t.match(compile('export const a = 1 2'), {
+    decls: {  
+      a: {
+        body: {
+          value: 1
+        }
+      }
+    },
+    exports: {
+      a: {
+        body: {
+          value: 1
+        }
+      }
+    },
+    defaultExport: {
+      body: { value: 2 }
+    } 
+  })
+  t.match(compile('const a = 1 const a = 2'), null)
+  t.match(compile('export const a = 1 const b = 2'), {
+    decls: {
+      a: {
+        body: { value: 1 }
+      },
+      b: {
+        body: { value: 2 }
+      }
+    },
+    exports: {
+      a: {
+        body: { value: 1 }
+      }
+    },
+    defaultExport: null
+  })
+  t.match(compile('export const a = 1 | 2'), {
+    decls: {
+      a: {
+        body: {
+          items: [
+            { value: 1 },
+            { value: 2 }
+          ]
+        }
+      }
+    }
+  })
+  t.done()
+})
+
+test('no export', t => {
+  t.match(compile('const a = 1'), null)
   t.done()
 })
