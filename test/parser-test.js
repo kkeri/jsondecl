@@ -30,6 +30,22 @@ test('invalid string', t => {
   t.done()
 })
 
+test('logical', t => {
+  t.notEqual(parse('!a'), null)
+  t.notEqual(parse('a|b'), null)
+  t.notEqual(parse('a&b'), null)
+  t.notEqual(parse('a&b|c'), null)
+  t.done()
+})
+
+test('parentheses', t => {
+  t.notEqual(parse('(a)'), null)
+  t.notEqual(parse('(a|b)'), null)
+  t.notEqual(parse('!(a|b)'), null)
+  t.notEqual(parse('a&(b|c)'), null)
+  t.done()
+})
+
 test('invalid import', t => {
   t.equal(parse('import'), null)
   t.equal(parse('import a'), null)
