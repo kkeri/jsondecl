@@ -150,5 +150,8 @@ const modelActions = {
   },
   constant_false (_false_) {
     return new model.Literal(false)
+  },
+  _terminal () {
+    return ''
   }
 }
