@@ -7,6 +7,20 @@ export class Module {
     this.exports = {}
     this.defaultExport = undefined
   }
+
+  test (value, id = '') {
+    if (id === '') {
+      if (!this.defaultExport) {
+        throw new Error('attempt to test against the default declaration but it is not declared')
+      }
+      return this.defaultExport.test(value)
+    } else {
+      if (!(id in this.exports)) {
+        throw new Error(`attempt to test against '${id}' but it is not declared`)
+      }
+      return this.exports[id].test(value)
+    }
+  }
 }
 
 export class Import {
@@ -29,6 +43,10 @@ export class Const {
     this.body = body
     this.exported = exported
   }
+
+  test (value) {
+    return this.body.test(value)
+  }
 }
 
 // expression
@@ -40,7 +58,7 @@ export class Expression {
     }
   }
 
-  match (value) {
+  test (value) {
     throw new Error(`can't call abstract method`)
   }
 }
@@ -51,9 +69,9 @@ export class LogicalOr extends Expression {
     this.items = items
   }
 
-  match (value) {
+  test (value) {
     for (let item of this.items) {
-      if (item.match(value)) {
+      if (item.test(value)) {
         return true
       }
     }
@@ -67,13 +85,24 @@ export class LogicalAnd extends Expression {
     this.items = items
   }
 
-  match (value) {
+  test (value) {
     for (let item of this.items) {
-      if (!item.match(value)) {
+      if (!item.test(value)) {
         return false
       }
     }
     return true
+  }
+}
+
+export class LogicalNot extends Expression {
+  constructor (expr) {
+    super()
+    this.expr = expr
+  }
+
+  test (value) {
+    return !this.expr.test(value)
   }
 }
 
@@ -83,7 +112,7 @@ export class ChainedCall extends Expression {
     this.calls = calls
   }
 
-  match (value) {
+  test (value) {
     let max = this.calls.length - 1
     for (let i = 0; i < max; i++) {
       value = this.calls[i].eval(value)
@@ -103,7 +132,7 @@ export class Call extends Expression {
     return this.value
   }
 
-  match (value) {
+  test (value) {
     this.source.eval()
   }
 }
@@ -117,7 +146,7 @@ export class Object_ extends Expression {
     }
   }
 
-  match (value) {
+  test (value) {
     if (typeof value !== 'object' || value === null) {
       return false
     }
@@ -125,14 +154,14 @@ export class Object_ extends Expression {
     // this should be optimized to be nearly linear
     // tip: most property names will be simply strings
     for (let name of Object.getOwnPropertyNames(value)) {
-      let match = false
+      let test = false
       for (let prop of this.properties) {
-        if (prop.name.match(name) && prop.value.match(value[name])) {
-          match = true
+        if (prop.name.test(name) && prop.value.test(value[name])) {
+          test = true
           occ[prop.index]++
         }
       }
-      if (!match) {
+      if (!test) {
         return false
       }
     }
@@ -151,14 +180,14 @@ export class Array_ extends Expression {
     this.items = items
   }
 
-  match (value) {
+  test (value) {
     if (!Array.isArray(value)) {
       return false
     }
     let vidx = 0
     for (let item of this.items) {
       let o = 0
-      while (o < item.maxCount && vidx < value.length && item.match(value[vidx++])) {
+      while (o < item.maxCount && vidx < value.length && item.test(value[vidx++])) {
         o++
       }
       if (o < item.minCount) {
@@ -200,7 +229,7 @@ export class Literal extends Expression {
     return this.value
   }
 
-  match (value) {
+  test (value) {
     return this.value === value
   }
 }
@@ -215,7 +244,7 @@ export class Regexp extends Expression {
     return this.regexp
   }
 
-  match (value) {
+  test (value) {
     return this.regexp.test(value)
   }
 }
