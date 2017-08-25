@@ -1,5 +1,9 @@
 
+export const any = (x) => true
+
 export const boolean = (x) => typeof x === 'boolean'
+
+export const string = (x) => typeof x === 'string'
 
 export const number = (x) => typeof x === 'number'
 
