@@ -101,6 +101,7 @@ JSONdecl {
 	regexpBody = ("\\/" | ~"/" any)*
 
 	constant =
+		| "this" -- this
 		| "null" -- null
 		| "true" -- true
 		| "false" -- false
