@@ -62,6 +62,9 @@ test('or', t => {
   t.match(compile('number|string').test(1), true)
   t.match(compile('number|string').test('a'), true)
   t.match(compile('number|string').test(null), false)
+  t.match(compile('/a/|/b/').test('a'), true)
+  t.match(compile('/a/|/b/').test('b'), true)
+  t.match(compile('/a/|/b/').test('c'), false)
   t.done()
 })
 
@@ -73,6 +76,9 @@ test('and', t => {
   t.match(compile('gt(1) & lt(3)').test(1), false)
   t.match(compile('gt(1) & lt(3)').test(2), true)
   t.match(compile('gt(1) & lt(3)').test(3), false)
+  t.match(compile('/a/&/b/').test('abc'), true)
+  t.match(compile('/a/&/b/').test('ca'), false)
+  t.match(compile('/a/&/b/').test('cb'), false)
   t.done()
 })
 
