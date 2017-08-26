@@ -31,7 +31,7 @@ JSONdecl {
 	Primary =
 		| Literal
 		| Grouping
-		| ChainedCall
+		| Chain
 
 	Literal =
 		| Object
@@ -41,11 +41,13 @@ JSONdecl {
 		| regexp
 		| constant
 
-	Grouping = "(" Expression ")"
+	Grouping = "(" Expression ")"	
 
-	ChainedCall = NonemptyListOf<Call, ".">
+	Chain = NonemptyListOf<(Call|Ref), ".">
 
-	Call = identifier ArgumentList?
+	Ref = identifier
+
+	Call = identifier "(" ListOf<Expression, ","> ")"
 
 	Object (an object) = "{" ListOf<Property, ","> "}"
 
@@ -54,8 +56,6 @@ JSONdecl {
 	String = string
 
 	// helpers
-
-	ArgumentList = "(" ListOf<Expression, ","> ")"
 
 	Property (a property) = Expression ":" Expression
 
