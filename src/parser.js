@@ -137,11 +137,11 @@ const modelActions = {
   string (quote1, chars, quote2) {
     return chars.source.contents
   },
-  regexp (slash1, body, slash2) {
-    return new model.RegExp_(new RegExp(body.source.contents))
+  regexp (slash1, body, slash2, flags) {
+    return new model.RegExp_(body.source.contents, flags.model())
   },
-  constant_this (_this_) {
-    return new model.This()
+  regexpFlags (chars) {
+    return this.source.contents
   },
   constant_null (_null_) {
     return new model.Literal(null)
@@ -153,6 +153,6 @@ const modelActions = {
     return new model.Literal(false)
   },
   _terminal () {
-    return ''
+    return this.source.contents
   }
 }

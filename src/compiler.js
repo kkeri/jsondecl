@@ -154,6 +154,18 @@ const builder = {
 
   Call (node, cc) {
     node.args.forEach(i => build(i, cc))
+  },
+
+  RegExp_ (node, cc) {
+    if (node.flags && node.flags !== 'i') {
+      cc.error(`'${node.flags}': illegal regexp flag (only 'i' is allowed)`)
+      return
+    }
+    try {
+      node.regexp = new RegExp(node.body, node.flags)
+    } catch (e) {
+      cc.error(e.message)
+    }
   }
 }
 

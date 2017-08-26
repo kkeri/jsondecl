@@ -46,6 +46,24 @@ test('parentheses', t => {
   t.done()
 })
 
+test('invalid regex', t => {
+  t.equal(parse('//'), null)
+  t.equal(parse('/a/3'), null)
+  t.equal(parse('/\\/g'), null)
+  t.done()
+})
+
+test('valid regex', t => {
+  t.notEqual(parse('/a/'), null)
+  t.notEqual(parse('/ abc/'), null)
+  t.notEqual(parse('/a/g'), null)
+  t.notEqual(parse('/\\//g'), null)
+  t.notEqual(parse('/\t/g'), null)
+  t.notEqual(parse('/\\r\\n/g'), null)
+  t.notEqual(parse('/a/ghj'), null)
+  t.done()
+})
+
 test('invalid import', t => {
   t.equal(parse('import'), null)
   t.equal(parse('import a'), null)

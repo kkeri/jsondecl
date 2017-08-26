@@ -280,10 +280,11 @@ export class Literal extends Expression {
   }
 }
 
-export class Regexp_ extends Expression {
-  constructor (regexp) {
+export class RegExp_ extends Expression {
+  constructor (body, flags) {
     super()
-    this.regexp = regexp
+    this.body = body
+    this.flags = flags
   }
 
   eval () {

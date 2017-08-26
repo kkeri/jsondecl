@@ -50,6 +50,18 @@ test('simple value', t => {
   t.done()
 })
 
+test('regex', t => {
+  t.notEqual(compile('/a/'), null)
+  t.notEqual(compile('/ abc/'), null)
+  t.notEqual(compile('/a/i'), null)
+  t.equal(compile('/a/g'), null)
+  t.notEqual(compile('/\\//i'), null)
+  t.notEqual(compile('/\t/'), null)
+  t.notEqual(compile('/\\r\\n/'), null)
+  t.equal(compile('/a/ghj'), null)
+  t.done()
+})
+
 test('identifier', t => {
   t.match(compile('a'), null)
   t.match(compile('const a = 1 a'), {

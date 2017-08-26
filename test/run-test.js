@@ -22,6 +22,19 @@ test('simple value', t => {
   t.done()
 })
 
+test('regex', t => {
+  t.match(compile('/a/').test('a'), true)
+  t.match(compile('/a/').test('b'), false)
+  t.match(compile('/ abc/').test('1 abc2'), true)
+  t.match(compile('/ abc/').test('1 abd2'), false)
+  t.match(compile('/ab/i').test('abc'), true)
+  t.match(compile('/ab/i').test('ABC'), true)
+  t.match(compile('/\\//i').test('/'), true)
+  t.match(compile('/\t/').test('\t'), true)
+  t.match(compile('/\\t/').test('\t'), true)
+  t.done()
+})
+
 test('built-in pattern', t => {
   t.match(compile('string').test(1), false)
   t.match(compile('number').test(1), true)

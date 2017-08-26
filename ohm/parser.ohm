@@ -97,8 +97,9 @@ JSONdecl {
 		| unicodeEscapeSpec
 	unicodeEscapeSpec = "u" hexDigit hexDigit hexDigit hexDigit
 
-	regexp (a regular expression) = "/" regexpBody "/"
+	regexp (a regular expression) = "/" regexpBody "/" regexpFlags
 	regexpBody = ("\\/" | ~"/" any)*
+	regexpFlags = ("A".."Z" | "a".."z")*
 
 	constant =
 		| "this" -- this
