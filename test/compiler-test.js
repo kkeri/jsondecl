@@ -55,7 +55,7 @@ test('identifier', t => {
   t.match(compile('const a = 1 a'), {
     defaultExport: {
       body: {
-        func: { value: 1 }
+        pattern: { value: 1 }
       }
     }
   })
@@ -69,15 +69,16 @@ test('import', t => {
   })
   t.match(compile('import { a } from "module/test.js" 1'), {
     decls: {
-      a: 3
+      a: { body: { value: 3 } },
     }
   })
   t.match(compile('import { a, b } from "module/test.js" 1'), {
     decls: {
-      a: 3,
-      b: 99
+      a: { body: { value: 3 } },
+      b: { body: { value: 99 } },
     }
   })
+  t.match(compile('import { a, a } from "module/test.js" 1'), null)
   t.match(compile('import { a } from "module/nofile.js" 1'), null)
   t.done()
 })
@@ -103,16 +104,12 @@ test('const', t => {
   t.match(compile('export const a = 1 2'), {
     decls: {  
       a: {
-        body: {
-          value: 1
-        }
+        body: { value: 1 }
       }
     },
     exports: {
       a: {
-        body: {
-          value: 1
-        }
+        body: { value: 1 }
       }
     },
     defaultExport: {

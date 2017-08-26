@@ -37,7 +37,7 @@ export class ImportItem {
   }
 }
 
-export class Const {
+export class Declaration {
   constructor (id, body, exported) {
     this.id = id
     this.body = body
@@ -106,18 +106,40 @@ export class LogicalNot extends Expression {
   }
 }
 
-export class ChainedCall extends Expression {
-  constructor (calls) {
+export class Chain extends Expression {
+  constructor (items) {
     super()
-    this.calls = calls
+    this.items = items
+  }
+
+  eval (value) {
+    for (let item of this.items) {
+      value = item.eval(value)
+    }
+    return value
   }
 
   test (value) {
-    let max = this.calls.length - 1
+    let max = this.items.length - 1
     for (let i = 0; i < max; i++) {
-      value = this.calls[i].eval(value)
+      value = this.items[i].eval(value)
     }
-    return this.calls[max].validate(value)
+    return this.items[max].validate(value)
+  }
+}
+
+export class Reference extends Expression {
+  constructor (id) {
+    super()
+    this.id = id
+  }
+
+  eval (base) {
+    return this.pattern.eval(base)
+  }
+
+  test (value) {
+    return this.pattern.test(value)
   }
 }
 
@@ -128,12 +150,36 @@ export class Call extends Expression {
     this.args = args
   }
 
+  eval (base) {
+    return this.func.eval.call(null, base, ...this.args.map(i => i.eval(base)))
+  }
+
+  test (value) {
+    return this.func.test.call(null, value, ...this.args.map(i => i.eval(value)))
+  }
+}
+
+export class Function_ extends Expression {
+  constructor (params, body) {
+    super()
+    this.params = params
+    this.body = body
+  }
+
   eval () {
     return this.value
   }
 
   test (value) {
     this.source.eval()
+  }
+}
+
+export class Custom extends Expression {
+  constructor (eval_, test) {
+    super()
+    this.eval = eval_
+    this.test = test
   }
 }
 
@@ -234,7 +280,7 @@ export class Literal extends Expression {
   }
 }
 
-export class Regexp extends Expression {
+export class Regexp_ extends Expression {
   constructor (regexp) {
     super()
     this.regexp = regexp
@@ -246,5 +292,11 @@ export class Regexp extends Expression {
 
   test (value) {
     return this.regexp.test(value)
+  }
+}
+
+export class This extends Expression {
+  eval (value) {
+    return value
   }
 }

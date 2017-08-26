@@ -1,32 +1,38 @@
-import { parse } from './parser'
 import { dirname, join } from 'path'
+import { parse } from './parser'
+import * as model from './model'
+import * as builtin from './builtin'
 
+const builtins = compileBuiltins(builtin)
+
+/**
+ * Compiles a source string into a declaration module.
+ * @param {string} str - source code
+ * @param {object} opts - provides resources and informations
+ */
 export function compile (str, opts = {}) {
-  const module = parse(str, {
+  const module_ = parse(str, {
     error: opts.error
   })
-  if (!module) return null
-  const cc = new CompilerContext(module, {
+  if (!module_) return null
+  module_.decls = Object.assign({}, builtins)
+  const cc = new CompilerContext(module_, {
     error: opts.error || function () {},
     importPath: dirname(opts.filename)
   })
-  cc.buildBlock(module)
+  build(module_, cc)
   if (cc.errors) return null
-  cc.bind(module)
+  resolve(module_, cc)
   if (cc.errors) return null
-  if (!cc.exports) {
-    cc.error(`the module should export at least one declaration`)
-    return null
-  }
-  return module
+  return module_
 }
 
 class CompilerContext {
-  constructor (module, opts) {
-    this.module = module
+  constructor (module_, opts) {
+    this.module = module_
     this.opts = opts
     this.errors = 0
-    this.exports = 0
+    this.exportCount = 0
     this.envStack = []
     this.currentBlock = undefined
   }
@@ -55,7 +61,7 @@ class CompilerContext {
         this.error(`duplicate default export`)
       } else {
         this.module.defaultExport = expr
-        this.exports++
+        this.exportCount++
       }
     } else if (id in this.currentBlock.decls) {
       this.error(`${id}: duplicate identifier`)
@@ -63,24 +69,9 @@ class CompilerContext {
       this.currentBlock.decls[id] = expr
       if (exported) {
         this.module.exports[id] = expr
-        this.exports++
+        this.exportCount++
       }
     }
-  }
-
-  buildBlock (node) {
-    let method = buildBlock[node.constructor.name]
-    if (method) method.call(node, this)
-  }
-
-  bind (node) {
-    let method = bind[node.constructor.name]
-    if (method) method.call(node, this)
-  }
-
-  compileImportExpression (expr) {
-    // todo: check type of import and handle accordingly
-    return expr
   }
 
   error (msg) {
@@ -89,25 +80,35 @@ class CompilerContext {
   }
 }
 
-const buildBlock = {
+/**
+ * A compilation step that builds blocks, namespaces and declarations.
+ */
+function build (node, cc) {
+  let method = builder[node.constructor.name]
+  if (method) method(node, cc)
+}
+const builder = {
 
-  Module (cc) {
-    cc.enter(this)
-    for (let import_ of this.importList) {
-      cc.buildBlock(import_)
+  Module (node, cc) {
+    cc.enter(node)
+    for (let import_ of node.importList) {
+      build(import_, cc)
     }
-    for (let decl of this.declList) {
-      cc.buildBlock(decl)
+    for (let decl of node.declList) {
+      build(decl, cc)
     }
     cc.leave()
+    if (!cc.exportCount) {
+      cc.error(`module should export at least one declaration`)
+    }
   },
 
-  Import (cc) {
+  Import (node, cc) {
     if (!cc.opts.importPath) {
       cc.error(`using import requires the 'importPath' option`)
       return
     }
-    const modulePath = join(cc.opts.importPath, this.moduleSpec)
+    const modulePath = join(cc.opts.importPath, node.moduleSpec)
     let donor
     try {
       donor = require(modulePath)
@@ -117,81 +118,144 @@ const buildBlock = {
         return
       }
     }
-    for (let item of this.importList) {
+    for (let item of node.importList) {
       if (item.originalId in donor) {
         cc.declare(item.localId,
-          cc.compileImportExpression(donor[item.originalId]))
+          compileImport(donor[item.originalId],
+            item.originalId,
+            item.localId,
+            node.moduleSpec,
+            cc.error.bind(cc)
+          )
+        )
       } else {
         cc.error(`${item.originalId}: identifier not defined in module ` +
-          `'${this.moduleSpec}'`)
+          `'${node.moduleSpec}'`)
       }
     }
   },
 
-  Const (cc) {
-    cc.declare(this.id, this, this.exported)
-    cc.buildBlock(this.body)
+  Declaration (node, cc) {
+    cc.declare(node.id, node, node.exported)
+    build(node.body, cc)
   },
 
-  LogicalOr (cc) {
-    this.items.forEach(i => cc.buildBlock(i))
+  LogicalOr (node, cc) {
+    node.items.forEach(i => build(i, cc))
   },
 
-  LogicalAnd (cc) {
-    this.items.forEach(i => cc.buildBlock(i))
+  LogicalAnd (node, cc) {
+    node.items.forEach(i => build(i, cc))
   },
 
-  ChainedCall (cc) {
-    this.calls.forEach(i => cc.buildBlock(i))
+  Chain (node, cc) {
+    node.items.forEach(i => build(i, cc))
   },
 
-  Call (cc) {
-    this.args.forEach(i => cc.buildBlock(i))
+  Call (node, cc) {
+    node.args.forEach(i => build(i, cc))
   }
 }
 
-const bind = {
+/**
+ * A compilation step that binds names to their declarations.
+ */
+function resolve (node, cc) {
+  let method = resolver[node.constructor.name]
+  if (method) method(node, cc)
+}
+const resolver = {
 
-  Module (cc) {
-    cc.enter(this)
-    for (let decl of this.declList) {
-      cc.bind(decl)
+  Module (node, cc) {
+    cc.enter(node)
+    for (let decl of node.declList) {
+      resolve(decl, cc)
     }
     cc.leave()
   },
 
-  Const (cc) {
-    cc.bind(this.body)
-    return this
+  Declaration (node, cc) {
+    resolve(node.body, cc)
+    return node
   },
 
-  LogicalOr (cc) {
-    this.items.forEach(i => cc.bind(i))
+  LogicalOr (node, cc) {
+    node.items.forEach(i => resolve(i, cc))
   },
 
-  LogicalAnd (cc) {
-    this.items.forEach(i => cc.bind(i))
+  LogicalAnd (node, cc) {
+    node.items.forEach(i => resolve(i, cc))
   },
 
-  ChainedCall (cc) {
-    this.calls.forEach(i => cc.bind(i))
+  Chain (node, cc) {
+    node.items.forEach(i => resolve(i, cc))
   },
 
-  Call (cc) {
-    this.func = cc.lookup(this.id)
-    this.args.forEach(i => cc.bind(i))
+  Reference (node, cc) {
+    node.pattern = cc.lookup(node.id)
   },
 
-  Object_ (cc) {
-    this.properties.forEach(i => cc.bind(i))
+  Call (node, cc) {
+    node.func = cc.lookup(node.id)
+    node.args.forEach(i => resolve(i, cc))
   },
 
-  Array_ (cc) {
-    this.items.forEach(i => cc.bind(i))
+  Object_ (node, cc) {
+    node.properties.forEach(i => resolve(i, cc))
   },
 
-  Property (cc) {
-    cc.bind(this.name)
-    cc.bind(this.value)
+  Array_ (node, cc) {
+    node.items.forEach(i => resolve(i, cc))
+  },
+
+  Property (node, cc) {
+    resolve(node.name, cc)
+    resolve(node.value, cc)
   }
+}
+
+/**
+ * Creates a declartion from an imported value.
+ * @param {*} value value to be imported
+ * @param {string} originalId foreign id of the imported element
+ * @param {string} localId local id of the imported element
+ * @param {string} moduleSpec foreign module name for diagnostics
+ * @param {function} error emits diagnostic messages
+ */
+function compileImport (value, originalId, localId, moduleSpec, error) {
+  switch (typeof value) {
+    case 'function':
+      return new model.Declaration(localId, new model.Custom(null, value))
+    case 'object': {
+      if (typeof value.eval === 'function') {
+        var eval_ = value.eval
+      }
+      if (typeof value.test === 'function') {
+        var test = value.test
+      }
+      if (!eval_ && !test) {
+        error(`${originalId} imported from '${moduleSpec}' must ` +
+          `implement 'eval' or 'test'`)
+        return null
+      }
+      return new model.Declaration(localId, new model.Custom(eval_, test))
+    }
+    case 'number':
+    case 'string':
+    case 'null':
+    case 'boolean':
+      return new model.Declaration(localId, new model.Literal(value))
+    default:
+      error(`${originalId} imported from '${moduleSpec}' has` +
+        `illegal type '${typeof value}'`)
+      return null
+  }
+}
+
+function compileBuiltins (builtin) {
+  let decls = {}
+  for (let b in builtin) {
+    decls[b] = compileImport(builtin[b], b, './builtin', _ => null)
+  }
+  return decls
 }
