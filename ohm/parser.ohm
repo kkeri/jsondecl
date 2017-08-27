@@ -8,9 +8,17 @@ JSONdecl {
 		| Import* Declaration* -- nodef
 
 	Import =
-		| "import" "{" ListOf<ImportItem, ","> "}" "from" string #term -- list
+		| "import" ImportClause "from" string #term -- list
 
-	ImportItem =
+	ImportClause =
+		| NamedImports
+
+	NamedImports =
+		| "{" "}" -- empty
+		| "{" NonemptyListOf<ImportSpecifier, ","> ","? "}" -- list
+
+	ImportSpecifier =
+		| identifier "as" identifier -- rename
 		| identifier -- simple
 
 	Declaration =
