@@ -92,6 +92,7 @@ test('invalid import', t => {
   t.equal(parse('import a'), null)
   t.equal(parse('import from'), null)
   t.equal(parse('import {} from'), null)
+  t.equal(parse('import {a as } from "a"'), null)
   t.done()
 })
 
@@ -153,6 +154,9 @@ test('valid import', t => {
   t.notEqual(parse('import { } from "b"; 0'), null)
   t.notEqual(parse('import { a } from "b"; 0'), null)
   t.notEqual(parse('import { a, b } from "a/b"; 0'), null)
+  t.notEqual(parse('import { a as x } from "a"'), null)
+  t.notEqual(parse('import { a as x, b, c as z } from "a"'), null)
+  t.notEqual(parse('import { a as x, } from "a"'), null)
   t.done()
 })
 
@@ -177,10 +181,16 @@ test('missing terminator', t => {
   t.done()
 })
 
-test('terminator', t => {
+test('invalid terminator', t => {
   t.equal(parse(';'), null)
   t.equal(parse('const a = 1;;'), null)
-  
+  t.done()
+})
+
+test('valid terminator', t => {
+  t.equal(parse(';'), null)
+  t.equal(parse('const a = 1;;'), null)
+
   t.notEqual(parse('import {} from "a"; 1'), null)
   t.notEqual(parse('import {} from "a"; const b = 0'), null)
   t.notEqual(parse('import {} from "a"; const b = 0; c'), null)

@@ -87,3 +87,10 @@ test('not', t => {
   t.match(compile('!1').test(2), true)
   t.done()
 })
+
+test('import', t => {
+  t.match(compile('import { a } from "./module/test"; a').test(3), true)
+  t.match(compile('import { regex } from "./module/test"; regex').test('reg'), true)
+  t.match(compile('import { a as x } from "./module/test"; x').test(3), true)
+  t.done()
+})

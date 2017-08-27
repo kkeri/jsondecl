@@ -90,8 +90,30 @@ test('import', t => {
       b: { body: { value: 99 } },
     }
   })
+  t.match(compile('import { regex } from "module/test.js"; 1'), {
+    decls: {
+      regex: { body: { eval: null, test: Function } }
+    }
+  })
+  t.match(compile('import { nondef } from "module/test.js"; 1'), null)
+  t.match(compile('import { undef } from "module/test.js"; 1'), null)
   t.match(compile('import { a, a } from "module/test.js"; 1'), null)
   t.match(compile('import { a } from "module/nofile.js"; 1'), null)
+  t.done()
+})
+
+test('import rename', t => {
+  t.match(compile('import { a as x } from "module/test.js"; 1'), {
+    decls: {
+      x: { body: { value: 3 } },
+    }
+  })
+  t.match(compile('import { a as x, b } from "module/test.js"; 1'), {
+    decls: {
+      x: { body: { value: 3 } },
+      b: { body: { value: 99 } },
+    }
+  })
   t.done()
 })
 
