@@ -92,8 +92,6 @@ test('invalid import', t => {
   t.equal(parse('import a'), null)
   t.equal(parse('import from'), null)
   t.equal(parse('import {} from'), null)
-  // t.equal(parse('import {} from ""'), null)
-  // t.equal(parse('import {} from "a"'), null)
   t.done()
 })
 
