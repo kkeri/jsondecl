@@ -240,10 +240,10 @@ function compileImport (value, originalId, localId, moduleSpec, error) {
       return new model.Declaration(localId, new model.Custom(null, value))
     case 'object': {
       if (typeof value.eval === 'function') {
-        var eval_ = value.eval
+        var eval_ = value.eval.bind(value)
       }
       if (typeof value.test === 'function') {
-        var test = value.test
+        var test = value.test.bind(value)
       }
       if (!eval_ && !test) {
         error(`${originalId} imported from '${moduleSpec}' must ` +
