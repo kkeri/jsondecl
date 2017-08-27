@@ -1,7 +1,7 @@
 ## parser
 
 - unescape string literals
-- make export an optional modifier
+- make export an optional modifier for declarations
 
 ## model
 
