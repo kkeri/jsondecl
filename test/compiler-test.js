@@ -160,6 +160,104 @@ test('const', t => {
   t.done()
 })
 
+test('const with comments', t => {
+  t.match(compile('/**/export/**/const/**/a/**/=/**/1/**/'), {
+    exports: {
+      a: {
+        body: {
+          value: 1
+        }
+      }
+    },
+  })
+  t.match(compile('//\rexport//\rconst//\ra//\r=//\r1//\r'), {
+    exports: {
+      a: {
+        body: {
+          value: 1
+        }
+      }
+    },
+  })
+  t.match(compile('export const a = 1;/**/\t //'), {
+    exports: {
+      a: {
+        body: {
+          value: 1
+        }
+      }
+    },
+  })
+  t.done()
+})
+
+test('const with terminator', t => {
+  t.match(compile('export const a = 1;/**/'), {
+    exports: {
+      a: {
+        body: {
+          value: 1
+        }
+      }
+    },
+  })
+  t.match(compile('export const a = 1;//'), {
+    exports: {
+      a: {
+        body: {
+          value: 1
+        }
+      }
+    },
+  })
+  t.match(compile('export const a = 1/**/;'), {
+    exports: {
+      a: {
+        body: {
+          value: 1
+        }
+      }
+    },
+  })
+  t.match(compile('export const a = 1/**/\r;'), {
+    exports: {
+      a: {
+        body: {
+          value: 1
+        }
+      }
+    },
+  })
+  t.match(compile('export const a = 1//\r;'), {
+    exports: {
+      a: {
+        body: {
+          value: 1
+        }
+      }
+    },
+  })
+  t.match(compile('export const a = 1\r;'), {
+    exports: {
+      a: {
+        body: {
+          value: 1
+        }
+      }
+    },
+  })
+  t.match(compile('export const a = 1\r \n '), {
+    exports: {
+      a: {
+        body: {
+          value: 1
+        }
+      }
+    },
+  })
+  t.done()
+})
+
 test('no export', t => {
   t.match(compile('const a = 1'), null)
   t.done()

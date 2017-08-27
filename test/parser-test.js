@@ -15,6 +15,23 @@ test('empty', t => {
   t.done()
 })
 
+test('comment', t => {
+  t.notEqual(parse('// comment'), null)
+  t.notEqual(parse('// comment\r'), null)
+  t.notEqual(parse('// comment\r//comment'), null)
+  t.notEqual(parse('/**/'), null)
+  t.notEqual(parse('/* */'), null)
+  t.notEqual(parse('/* *//* */'), null)
+  t.notEqual(parse('/*\r\n\t*///'), null)
+  t.notEqual(parse('//\rexport//\rconst//\ra//\r=//\r1//\r'), null)
+  t.notEqual(parse('//export//\rconst//\ra//\r=//\r1//\r'), null)
+  t.equal(parse('//\rexport//const//\ra//\r=//\r1//\r'), null)
+  t.equal(parse('//\rexport//\rconst//a//\r=//\r1//\r'), null)
+  t.equal(parse('//\rexport//\rconst//\ra//=//\r1//\r'), null)
+  t.equal(parse('//\rexport//\rconst//\ra//\r=//1//\r'), null)
+  t.done()
+})
+
 test('invalid number', t => {
   t.equal(parse('-'), null)
   t.equal(parse('+'), null)
@@ -163,6 +180,9 @@ test('missing terminator', t => {
 })
 
 test('terminator', t => {
+  t.equal(parse(';'), null)
+  t.equal(parse('const a = 1;;'), null)
+  
   t.notEqual(parse('import {} from "a"; 1'), null)
   t.notEqual(parse('import {} from "a"; const b = 0'), null)
   t.notEqual(parse('import {} from "a"; const b = 0; c'), null)
