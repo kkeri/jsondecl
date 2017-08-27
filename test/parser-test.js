@@ -1,11 +1,17 @@
 'use strict'
 
 const test = require('tap').test
-const parse = require('../lib/parser').parse
+const _parse = require('../lib/parser').parse
 
-test('invalid default', t => {
-  t.equal(parse(''), null)
-  t.equal(parse('\r'), null)
+function parse (str) {
+  return _parse(str, {
+    error: (str) => console.error('\n', str)
+  })
+}
+
+test('empty', t => {
+  t.notEqual(parse(''), null)
+  t.notEqual(parse('\r'), null)
   t.done()
 })
 
@@ -47,13 +53,13 @@ test('parentheses', t => {
 })
 
 test('invalid regex', t => {
-  t.equal(parse('//'), null)
   t.equal(parse('/a/3'), null)
   t.equal(parse('/\\/g'), null)
   t.done()
 })
 
 test('valid regex', t => {
+  //t.notEqual(parse('//'), null)
   t.notEqual(parse('/a/'), null)
   t.notEqual(parse('/ abc/'), null)
   t.notEqual(parse('/a/g'), null)
@@ -69,8 +75,8 @@ test('invalid import', t => {
   t.equal(parse('import a'), null)
   t.equal(parse('import from'), null)
   t.equal(parse('import {} from'), null)
-  t.equal(parse('import {} from ""'), null)
-  t.equal(parse('import {} from "a"'), null)
+  // t.equal(parse('import {} from ""'), null)
+  // t.equal(parse('import {} from "a"'), null)
   t.done()
 })
 
@@ -129,9 +135,9 @@ test('valid id', t => {
 })
 
 test('valid import', t => {
-  t.notEqual(parse('import { } from "b" 0'), null)
-  t.notEqual(parse('import { a } from "b" 0'), null)
-  t.notEqual(parse('import { a, b } from "a-b" 0'), null)
+  t.notEqual(parse('import { } from "b"; 0'), null)
+  t.notEqual(parse('import { a } from "b"; 0'), null)
+  t.notEqual(parse('import { a, b } from "a/b"; 0'), null)
   t.done()
 })
 
@@ -145,6 +151,33 @@ test('invalid const', t => {
 test('valid const', t => {
   t.notEqual(parse('const a = 0'), null)
   t.notEqual(parse('const b = "a"'), null)
+  t.done()
+})
+
+test('missing terminator', t => {
+  t.equal(parse('import {} from "a" 1'), null)
+  t.equal(parse('import {} from "a" const b = 0'), null)
+  t.equal(parse('import {} from "a" const b = 0 c'), null)
+  t.equal(parse('const a = 0 const b = 0'), null)
+  t.done()
+})
+
+test('terminator', t => {
+  t.notEqual(parse('import {} from "a"; 1'), null)
+  t.notEqual(parse('import {} from "a"; const b = 0'), null)
+  t.notEqual(parse('import {} from "a"; const b = 0; c'), null)
+  t.notEqual(parse('const a = 0; const b = 0'), null)
+
+  t.notEqual(parse('import {} from "a"; 1;'), null)
+  t.notEqual(parse('import {} from "a"; const b = 0;'), null)
+  t.notEqual(parse('import {} from "a"; const b = 0; c;'), null)
+  t.notEqual(parse('const a = 0; const b = 0;'), null)
+
+  t.notEqual(parse('import {} from "a"\n 1\n'), null)
+  t.notEqual(parse('import {} from "a"\n const b = 0\n'), null)
+  t.notEqual(parse('import {} from "a"\n const b = 0\n c\n'), null)
+  t.notEqual(parse('const a = 0\n const b = 0\n'), null)
+
   t.done()
 })
 

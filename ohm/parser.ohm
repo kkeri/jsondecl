@@ -4,19 +4,19 @@ JSONdecl {
 	// module
 
 	Module =
-		| Import* ~Declarator Expression -- short
-		| Import* Declaration+ ~Declarator Expression? -- long
+		| Import* Declaration* ~Declarator Expression #term -- def
+		| Import* Declaration* -- nodef
 
 	Import =
-		| "import" "{" ListOf<ImportItem, ","> "}" "from" string -- list
+		| "import" "{" ListOf<ImportItem, ","> "}" "from" string #term -- list
 
 	ImportItem =
 		| identifier -- simple
 
 	Declaration =
-		| "const" identifier "=" Expression -- const
-		| "export" "const" identifier "=" Expression -- export_const
-		| "export" "default" Expression -- export_default
+		| "const" identifier "=" Expression #term -- const
+		| "export" "const" identifier "=" Expression #term -- export_const
+		| "export" "default" Expression #term -- export_default
 
 	// expressions
 
@@ -69,6 +69,7 @@ JSONdecl {
 	comment = multiLineComment | singleLineComment
 	multiLineComment = "/*" (~"*/" any)* "*/"
 	singleLineComment = "//" (~("\n" | "\r") any)*
+	term = (" " | "\t")* (";" | "\r" | "\n" | end)
 
 	identifier (an indentifier) = identifierStart identifierPart*
 	identifierStart = "A".."Z" | "a".."z" | "_"
@@ -98,7 +99,7 @@ JSONdecl {
 	unicodeEscapeSpec = "u" hexDigit hexDigit hexDigit hexDigit
 
 	regexp (a regular expression) = "/" regexpBody "/" regexpFlags
-	regexpBody = ("\\/" | ~"/" any)*
+	regexpBody = ("\\/" | ~"/" any)+
 	regexpFlags = ("A".."Z" | "a".."z")*
 
 	constant =

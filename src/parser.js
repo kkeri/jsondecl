@@ -36,20 +36,17 @@ const modelActions = {
 
   // module
 
-  Module_short (imports, expr) {
-    return new model.Module(imports.model(),
-      [new model.Declaration('', expr.model(), true)])
+  Module_nodef (imports, decls) {
+    return new model.Module(imports.model(), decls.model())
   },
-  Module_long (imports, decls, expr) {
-    let declList = decls.model()
-    let exprList = expr.model()
-    if (exprList.length) declList.push(new model.Declaration('', exprList[0], true))
-    return new model.Module(imports.model(), declList)
+  Module_def (imports, decls, expr, term) {
+    let defExp = new model.Declaration('', expr.model(), true)
+    return new model.Module(imports.model(), decls.model().concat(defExp))
   },
 
   // import
 
-  Import_list (_imp_, _lbr_, items, _rbr_, _from_, moduleSpec) {
+  Import_list (_imp_, _lbr_, items, _rbr_, _from_, moduleSpec, term) {
     return new model.Import(moduleSpec.model(), items.asIteration().model())
   },
   ImportItem_simple (id) {
@@ -58,13 +55,13 @@ const modelActions = {
 
   // declaration
 
-  Declaration_const (_const_, id, _eq_, expr) {
+  Declaration_const (_const_, id, _eq_, expr, term) {
     return new model.Declaration(id.model(), expr.model(), false)
   },
-  Declaration_export_const (_exp_, _const_, id, _eq_, expr) {
+  Declaration_export_const (_exp_, _const_, id, _eq_, expr, term) {
     return new model.Declaration(id.model(), expr.model(), true)
   },
-  Declaration_export_default (_exp_, _def_, expr) {
+  Declaration_export_default (_exp_, _def_, expr, term) {
     return new model.Declaration('', expr.model(), true)
   },
 

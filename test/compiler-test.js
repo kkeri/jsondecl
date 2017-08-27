@@ -7,7 +7,7 @@ const model = require('../lib/model')
 function compile(str) {
   return _compile(str, {
     filename: __filename,
-    error: (str) => console.log(str)
+    error: (str) => console.error('\n', str)
   })
 }
 
@@ -64,7 +64,7 @@ test('regex', t => {
 
 test('identifier', t => {
   t.match(compile('a'), null)
-  t.match(compile('const a = 1 a'), {
+  t.match(compile('const a = 1; a'), {
     defaultExport: {
       body: {
         pattern: { value: 1 }
@@ -75,23 +75,23 @@ test('identifier', t => {
 })
 
 test('import', t => {
-  t.match(compile('import { } from "module/test.js" 1'), {
+  t.match(compile('import { } from "module/test.js"; 1'), {
     decls: {
     }
   })
-  t.match(compile('import { a } from "module/test.js" 1'), {
+  t.match(compile('import { a } from "module/test.js"; 1'), {
     decls: {
       a: { body: { value: 3 } },
     }
   })
-  t.match(compile('import { a, b } from "module/test.js" 1'), {
+  t.match(compile('import { a, b } from "module/test.js"; 1'), {
     decls: {
       a: { body: { value: 3 } },
       b: { body: { value: 99 } },
     }
   })
-  t.match(compile('import { a, a } from "module/test.js" 1'), null)
-  t.match(compile('import { a } from "module/nofile.js" 1'), null)
+  t.match(compile('import { a, a } from "module/test.js"; 1'), null)
+  t.match(compile('import { a } from "module/nofile.js"; 1'), null)
   t.done()
 })
 
@@ -113,7 +113,7 @@ test('const', t => {
     },
     defaultExport: null
   })
-  t.match(compile('export const a = 1 2'), {
+  t.match(compile('export const a = 1; 2'), {
     decls: {  
       a: {
         body: { value: 1 }
@@ -128,8 +128,8 @@ test('const', t => {
       body: { value: 2 }
     } 
   })
-  t.match(compile('const a = 1 const a = 2'), null)
-  t.match(compile('export const a = 1 const b = 2'), {
+  t.match(compile('const a = 1; const a = 2'), null)
+  t.match(compile('export const a = 1; const b = 2'), {
     decls: {
       a: {
         body: { value: 1 }
