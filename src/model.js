@@ -30,7 +30,7 @@ export class Import {
   }
 }
 
-export class ImportItem {
+export class ImportSpecifier {
   constructor (originalId, localId) {
     this.originalId = originalId
     this.localId = localId

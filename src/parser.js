@@ -46,11 +46,20 @@ const modelActions = {
 
   // import
 
-  Import_list (_imp_, _lbr_, items, _rbr_, _from_, moduleSpec, term) {
-    return new model.Import(moduleSpec.model(), items.asIteration().model())
+  Import_list (_imp_, items, _from_, moduleSpec, term) {
+    return new model.Import(moduleSpec.model(), items.model())
   },
-  ImportItem_simple (id) {
-    return new model.ImportItem(id.model(), id.model())
+  NamedImports_empty (_lbr_, _rbr_) {
+    return []
+  },
+  NamedImports_list (_lbr_, items, _commaOpt_, _rbr_) {
+    return items.asIteration().model()
+  },
+  ImportSpecifier_simple (id) {
+    return new model.ImportSpecifier(id.model(), id.model())
+  },
+  ImportSpecifier_rename (origId, _as_, localId) {
+    return new model.ImportSpecifier(origId.model(), localId.model())
   },
 
   // declaration
