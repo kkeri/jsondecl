@@ -65,11 +65,16 @@ JSONdecl {
 
 	// lexical rules
 
-	space := "\t" | "\n" | "\r" | " " | comment
-	comment = multiLineComment | singleLineComment
-	multiLineComment = "/*" (~"*/" any)* "*/"
-	singleLineComment = "//" (~("\n" | "\r") any)*
-	term = (" " | "\t")* (";" | "\r" | "\n" | end)
+	space := "\t" | " " | "\n" | "\r" | comment
+	spaceInline = "\t" | " " | commentInline
+	comment = blockComment | lineEndComment
+	commentInline = blockCommentInline | lineEndComment
+	blockComment = "/*" (~"*/" any)* "*/"
+	blockCommentInline = "/*" (~("*/" | "\n" | "\r") any)* "*/"
+	lineEndComment = "//" (~("\n" | "\r") any)*
+	term =
+		| space* (";" | end)
+		| spaceInline* ("\r" | "\n" | end)
 
 	identifier (an indentifier) = identifierStart identifierPart*
 	identifierStart = "A".."Z" | "a".."z" | "_"
