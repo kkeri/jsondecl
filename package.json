@@ -5,7 +5,7 @@
   "main": "lib/index.js",
   "scripts": {
     "standard": "standard src/*.js",
-    "test": "standard src/*.js && tap -b test/*.js",
+    "test": "standard src/*.js && tap -J -b test/*.js",
     "build": "npm run build-babel && npm run build-ohm",
     "build-babel": "babel --presets=es2015 src --out-dir lib --source-maps",
     "build-ohm": "node ohm/build",
