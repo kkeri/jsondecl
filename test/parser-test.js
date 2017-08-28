@@ -87,6 +87,20 @@ test('valid regex', t => {
   t.done()
 })
 
+test('invalid grouping', t => {
+  t.equal(parse('()'), null)
+  t.done()
+})
+test('valid grouping', t => {
+  t.notEqual(parse('(1)'), null)
+  t.notEqual(parse('(a)'), null)
+  t.notEqual(parse('(a())'), null)
+  t.notEqual(parse('(a.b())'), null)
+  t.notEqual(parse('a | (b & c)'), null)
+  t.notEqual(parse('1 | (2 | "a" & a.b)'), null)
+  t.done()
+})
+
 test('invalid import', t => {
   t.equal(parse('import'), null)
   t.equal(parse('import a'), null)
@@ -206,6 +220,23 @@ test('valid terminator', t => {
   t.notEqual(parse('import {} from "a"\n const b = 0\n c\n'), null)
   t.notEqual(parse('const a = 0\n const b = 0\n'), null)
 
+  t.done()
+})
+
+test('invalid object', t => {
+  t.equal(parse('{'), null)
+  t.equal(parse('{ "a" }'), null)
+  t.equal(parse('{ "a" : }'), null)
+  t.equal(parse('{ "a": "b", }'), null)
+  t.done()
+})
+
+test('valid object', t => {
+  t.notEqual(parse('{}'), null)
+  t.notEqual(parse('{ "a": "b" }'), null)
+  t.notEqual(parse('{ a: b }'), null)
+  t.notEqual(parse('{ a: b, c: d }'), null)
+  t.notEqual(parse('{ a | b : c & d }'), null)
   t.done()
 })
 

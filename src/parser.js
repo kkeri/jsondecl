@@ -129,7 +129,7 @@ const modelActions = {
   // helpers
 
   Property (name, _colon_, value) {
-    return new model.Property(name)
+    return new model.Property(name.model(), value.model())
   },
 
   // lexical rules

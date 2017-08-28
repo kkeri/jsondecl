@@ -284,3 +284,44 @@ test('no export', t => {
   t.match(compile('const a = 1'), null)
   t.done()
 })
+
+test('object', t => {
+  t.match(compile('{}'), {
+    defaultExport: {
+      body: {
+        propertyList: [
+        ]
+      }
+    }
+  })
+  t.match(compile('{ a: b }'), null)
+  t.match(compile('{ "a": "b" }'), {
+    defaultExport: {
+      body: {
+        propertyList: [
+          {
+            name: { value: "a" },
+            value: { value: "b" }
+          }
+        ]
+      }
+    }
+  })
+  t.match(compile('{ "a": "b", "c": "d" }'), {
+    defaultExport: {
+      body: {
+        propertyList: [
+          {
+            name: { value: "a" },
+            value: { value: "b" }
+          },
+          {
+            name: { value: "c" },
+            value: { value: "d" }
+          }
+        ]
+      }
+    }
+  })
+  t.done()
+})

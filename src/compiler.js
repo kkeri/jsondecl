@@ -213,7 +213,7 @@ const resolver = {
   },
 
   Object_ (node, cc) {
-    node.properties.forEach(i => resolve(i, cc))
+    node.propertyList.forEach(i => resolve(i, cc))
   },
 
   Array_ (node, cc) {
@@ -227,7 +227,7 @@ const resolver = {
 }
 
 /**
- * Creates a declartion from an imported value.
+ * Creates a declaration from an imported value.
  * @param {*} value value to be imported
  * @param {string} originalId foreign id of the imported element
  * @param {string} localId local id of the imported element

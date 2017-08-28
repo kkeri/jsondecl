@@ -88,9 +88,45 @@ test('not', t => {
   t.done()
 })
 
+test('grouping', t => {
+  t.match(compile('(1)').test(1), true)
+  t.match(compile('!(1|2)').test(1), false)
+  t.match(compile('!(1|2)').test(2), false)
+  t.match(compile('!(1|2)').test(3), true)
+  t.match(compile('/a/ & (/b/ | /c/)').test("a"), false)
+  t.match(compile('/a/ & (/b/ | /c/)').test("b"), false)
+  t.match(compile('/a/ & (/b/ | /c/)').test("c"), false)
+  t.match(compile('/a/ & (/b/ | /c/)').test("ab"), true)
+  t.match(compile('/a/ & (/b/ | /c/)').test("ac"), true)
+  t.match(compile('/a/ & (/b/ | /c/)').test("bc"), false)
+  t.done()
+})
+
 test('import', t => {
   t.match(compile('import { a } from "./module/test"; a').test(3), true)
   t.match(compile('import { regex } from "./module/test"; regex').test('reg'), true)
   t.match(compile('import { a as x } from "./module/test"; x').test(3), true)
+  t.done()
+})
+
+test('object', t => {
+  t.match(compile('{}').test(3), false)
+  t.match(compile('{}').test({}), true)
+  t.match(compile('{}').test([]), false)
+
+  t.match(compile('{ "a": "b" }').test({}), false)
+  t.match(compile('{ "a": "b" }').test({ b: "b" }), false)
+  t.match(compile('{ "a": "b" }').test({ a: "c" }), false)
+  t.match(compile('{ "a": "b" }').test({ a: "b" }), true)
+
+  t.match(compile('{ "a" | "b" : "b" }').test({ a: "b" }), true)
+  t.match(compile('{ "a" | "b" : "b" }').test({ b: "b" }), true)
+  t.match(compile('{ "a" | "b" : "b" }').test({ c: "b" }), false)
+  t.match(compile('{ "a" : "b" | "c" }').test({ a: "a" }), false)
+  t.match(compile('{ "a" : "b" | "c" }').test({ a: "b" }), true)
+  t.match(compile('{ "a" : "b" | "c" }').test({ a: "c" }), true)
+
+  t.match(compile('{ "a" : "b" }').test({ a: "b", b: "b" }), false)
+  t.match(compile('{ "a" | "b" : "b" }').test({ a: "b", b: "b" }), true)
   t.done()
 })

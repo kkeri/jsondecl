@@ -184,34 +184,34 @@ export class Custom extends Expression {
 }
 
 export class Object_ extends Expression {
-  constructor (properties) {
+  constructor (propertyList) {
     super()
-    this.properties = properties
-    for (let i = 0; i < properties.length; i++) {
-      properties[i].index = i
+    this.propertyList = propertyList
+    for (let i = 0; i < propertyList.length; i++) {
+      propertyList[i].index = i
     }
   }
 
   test (value) {
-    if (typeof value !== 'object' || value === null) {
+    if (typeof value !== 'object' || value === null || Array.isArray(value)) {
       return false
     }
-    let occ = new Array(this.properties.length).fill(0)
+    let occ = new Array(this.propertyList.length).fill(0)
     // this should be optimized to be nearly linear
     // tip: most property names will be simply strings
     for (let name of Object.getOwnPropertyNames(value)) {
-      let test = false
-      for (let prop of this.properties) {
+      let match = false
+      for (let prop of this.propertyList) {
         if (prop.name.test(name) && prop.value.test(value[name])) {
-          test = true
+          match = true
           occ[prop.index]++
         }
       }
-      if (!test) {
+      if (!match) {
         return false
       }
     }
-    for (let prop of this.properties) {
+    for (let prop of this.propertyList) {
       if (occ[prop.index] < prop.minCount || occ[prop.index] > prop.maxCount) {
         return false
       }
@@ -247,12 +247,12 @@ export class Array_ extends Expression {
 // helpers
 
 export class Property extends Expression {
-  constructor (name, value, minCount, maxCount) {
+  constructor (name, value, minCount = 1, maxCount = Infinity) {
     super()
     this.name = name
     this.value = value
-    this.minCount = minCount || 1
-    this.maxCount = maxCount || 1
+    this.minCount = minCount
+    this.maxCount = maxCount
   }
 }
 
