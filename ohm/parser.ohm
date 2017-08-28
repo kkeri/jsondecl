@@ -65,7 +65,16 @@ JSONdecl {
 
 	// helpers
 
-	Property (a property) = Expression ":" Expression
+	Property (a property) =
+		| Expression Cardinality ":" Expression -- cardinality
+		| Expression ":" Expression -- default
+		| Expression "-" -- deny
+
+	Cardinality = "?" | "*" | "+" | "-" | NumericCardinality
+
+	NumericCardinality =
+		| "{" integerPart "}" -- single
+		| "{" integerPart ".." integerPart "}" -- from_to
 
 	ListItem (a list item) = Expression
 
