@@ -36,6 +36,14 @@ test('regex', t => {
 })
 
 test('built-in pattern', t => {
+  t.match(compile('any').test(null), true)
+  t.match(compile('any').test(true), true)
+  t.match(compile('any').test(false), true)
+  t.match(compile('any').test(1), true)
+  t.match(compile('any').test("a"), true)
+  t.match(compile('any').test({}), true)
+  t.match(compile('any').test([]), true)
+  t.match(compile('any').test(/a/), true)
   t.match(compile('string').test(1), false)
   t.match(compile('number').test(1), true)
   t.match(compile('integer').test(1), true)
@@ -113,6 +121,7 @@ test('object', t => {
   t.match(compile('{}').test(3), false)
   t.match(compile('{}').test({}), true)
   t.match(compile('{}').test([]), false)
+  t.match(compile('{ "length": any }').test([]), false)
 
   t.match(compile('{ "a": "b" }').test({}), false)
   t.match(compile('{ "a": "b" }').test({ b: "b" }), false)
