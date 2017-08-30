@@ -144,7 +144,7 @@ export class Reference extends Expression {
 }
 
 export class Call extends Expression {
-  constructor (id, args) {
+  constructor (id, args = []) {
     super()
     this.id = id
     this.args = args
@@ -196,28 +196,38 @@ export class Object_ extends Expression {
     if (typeof value !== 'object' || value === null || Array.isArray(value)) {
       return false
     }
-    let occ = new Array(this.propertyList.length).fill(0)
-    // this should be optimized to be nearly linear
-    // tip: most property names will be simply strings
-    for (let name of Object.getOwnPropertyNames(value)) {
-      let match = false
-      for (let prop of this.propertyList) {
-        if (prop.name.test(name) && prop.value.test(value[name])) {
-          match = true
-          occ[prop.index]++
-        }
-      }
-      if (!match) {
-        return false
-      }
-    }
     for (let prop of this.propertyList) {
-      if (occ[prop.index] < prop.minCount || occ[prop.index] > prop.maxCount) {
-        return false
-      }
+      if (!prop.test(value)) return false
     }
     return true
   }
+
+  // test (value) {
+  //   if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+  //     return false
+  //   }
+  //   let occ = new Array(this.propertyList.length).fill(0)
+  //   // this should be optimized to be nearly linear
+  //   // tip: most property names will be simply strings
+  //   for (let name of Object.getOwnPropertyNames(value)) {
+  //     let match = false
+  //     for (let prop of this.propertyList) {
+  //       if (prop.name.test(name) && prop.value.test(value[name])) {
+  //         match = true
+  //         occ[prop.index]++
+  //       }
+  //     }
+  //     if (!match) {
+  //       return false
+  //     }
+  //   }
+  //   for (let prop of this.propertyList) {
+  //     if (occ[prop.index] < prop.minCount || occ[prop.index] > prop.maxCount) {
+  //       return false
+  //     }
+  //   }
+  //   return true
+  // }
 }
 
 export class Array_ extends Expression {
@@ -253,6 +263,25 @@ export class Property extends Expression {
     this.value = value
     this.minCount = minCount
     this.maxCount = maxCount
+  }
+
+  test (value) {
+    // this is checked in the object pattern
+    // if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    //   return false
+    // }
+    let occurs = 0
+    for (let name of Object.getOwnPropertyNames(value)) {
+      if (this.name.test(name)) {
+        if (this.value.test(value[name])) {
+          occurs++
+        } else {
+          return false
+        }
+      }
+    }
+    if (occurs < this.minCount || occurs > this.maxCount) return false
+    return true
   }
 }
 
