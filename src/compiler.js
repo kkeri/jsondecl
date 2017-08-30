@@ -156,6 +156,15 @@ const builder = {
     node.args.forEach(i => build(i, cc))
   },
 
+  Object_ (node, cc) {
+    node.propertyList.forEach(i => build(i, cc))
+  },
+
+  Property (node, cc) {
+    build(node.name, cc)
+    build(node.value, cc)
+  },
+
   RegExp_ (node, cc) {
     if (node.flags && node.flags !== 'i') {
       cc.error(`'${node.flags}': illegal regexp flag (only 'i' is allowed)`)

@@ -128,8 +128,30 @@ const modelActions = {
 
   // helpers
 
-  Property (name, _colon_, value) {
+  Property_cardinality (name, card, _colon_, value) {
+    const c = card.model()
+    return new model.Property(name.model(), value.model(), c.low, c.high)
+  },
+  Property_default (name, _colon_, value) {
     return new model.Property(name.model(), value.model())
+  },
+  Property_deny (name, _dash_) {
+    return new model.Property(name.model(), new model.Call('any'), 0, 0)
+  },
+  Cardinality (c) {
+    switch (c) {
+      case '-': return { low: 0, high: 0 }
+      case '?': return { low: 0, high: 1 }
+      case '+': return { low: 1, high: Infinity }
+      case '*': return { low: 0, high: Infinity }
+      default: return c
+    }
+  },
+  NumericCardinality_single (_lbr_, int, _rbr_) {
+    return { low: int.model(), high: int.model() }
+  },
+  NumericCardinality_range (_lbr_, low, _dotdot_, high, _rbr_) {
+    return { low: low.model(), high: high.model() }
   },
 
   // lexical rules

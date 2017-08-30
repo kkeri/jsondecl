@@ -93,6 +93,8 @@ test('and', t => {
 test('not', t => {
   t.match(compile('!1').test(1), false)
   t.match(compile('!1').test(2), true)
+  t.match(compile('!!1').test(1), true)
+  t.match(compile('!!!1').test(1), false)
   t.done()
 })
 
@@ -135,7 +137,7 @@ test('object', t => {
   t.match(compile('{ "a" : "b" | "c" }').test({ a: "b" }), true)
   t.match(compile('{ "a" : "b" | "c" }').test({ a: "c" }), true)
 
-  t.match(compile('{ "a" : "b" }').test({ a: "b", b: "b" }), false)
+  t.match(compile('{ "a" : "b" }').test({ a: "b", b: "b" }), true)
   t.match(compile('{ "a" : "b", any: any }').test({ a: "b", b: "b" }), true)
   t.match(compile('{ "a" | "b" : "b" }').test({ a: "b", b: "b" }), true)
 
@@ -148,5 +150,14 @@ test('object', t => {
   t.match(compile('{ any: number }').test({ a: 1, b: 2 }), true)
   t.match(compile('{ any: number }').test({ a: 1, b: null }), false)
   t.match(compile('{ any: any }').test({ a: "b", b: "b" }), true)
+  t.done()
+})
+
+test('object', t => {
+  t.match(compile('{ "a"- }').test({ a: 1 }), false)
+  t.match(compile('{ "a"- }').test({ a: "a" }), false)
+  t.match(compile('{ "a"- }').test({}), true)
+  t.match(compile('{ /a/+: number }').test({ a: 1 }), true)
+  t.match(compile('{ /a/+: number }').test({ a: 1,  }), true)
   t.done()
 })

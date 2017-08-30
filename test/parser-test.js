@@ -240,4 +240,26 @@ test('valid object', t => {
   t.done()
 })
 
+test('invalid cardinality', t => {
+  t.equal(parse('{ "a"%: "b" }'), null)
+  t.equal(parse('{ "a"{}: "b" }'), null)
+  t.equal(parse('{ "a"{"a"}: "b" }'), null)
+  t.equal(parse('{ "a"{x}: "b" }'), null)
+  t.equal(parse('{ "a"{1-3}: "b" }'), null)
+  t.done()
+})
+
+test('valid cardinality', t => {
+  t.notEqual(parse('{ "a"*: "b" }'), null)
+  t.notEqual(parse('{ "a"?: "b" }'), null)
+  t.notEqual(parse('{ "a"+: "b" }'), null)
+  t.notEqual(parse('{ "a"-: "b" }'), null)
+  t.notEqual(parse('{ "a"- }'), null)
+  t.notEqual(parse('{ "a"-, b- }'), null)
+  t.notEqual(parse('{ "a"{1}: "b" }'), null)
+  t.notEqual(parse('{ "a"{33}: "b" }'), null)
+  t.notEqual(parse('{ "a"{1..3}: "b" }'), null)
+  t.done()
+})
+
 
