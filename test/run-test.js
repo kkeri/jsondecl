@@ -153,11 +153,34 @@ test('object', t => {
   t.done()
 })
 
-test('object', t => {
+test('cardinality', t => {
   t.match(compile('{ "a"- }').test({ a: 1 }), false)
   t.match(compile('{ "a"- }').test({ a: "a" }), false)
   t.match(compile('{ "a"- }').test({}), true)
+
+  t.match(compile('{ /a/?: number }').test({}), true)
+  t.match(compile('{ /a/?: number }').test({ b: 1 }), true)
+  t.match(compile('{ /a/?: number }').test({ a: 'x' }), false)
+  t.match(compile('{ /a/?: number }').test({ a: 1 }), true)
+  t.match(compile('{ /a/?: number }').test({ ab: 1, ac: 1 }), false)
+  t.match(compile('{ /a/?: number }').test({ a: 1, b: 1 }), true)
+  t.match(compile('{ /a/?: number }').test({ ab: 1, ac: 'x' }), false)
+
+  t.match(compile('{ /a/*: number }').test({}), true)
+  t.match(compile('{ /a/*: number }').test({ b: 1 }), true)
+  t.match(compile('{ /a/*: number }').test({ a: 'x' }), false)
+  t.match(compile('{ /a/*: number }').test({ a: 1 }), true)
+  t.match(compile('{ /a/*: number }').test({ ab: 1, ac: 1 }), true)
+  t.match(compile('{ /a/*: number }').test({ a: 1, b: 1 }), true)
+  t.match(compile('{ /a/*: number }').test({ ab: 1, ac: 'x' }), false)
+
+  t.match(compile('{ /a/+: number }').test({}), false)
+  t.match(compile('{ /a/+: number }').test({ b: 1 }), false)
+  t.match(compile('{ /a/+: number }').test({ a: 'x' }), false)
   t.match(compile('{ /a/+: number }').test({ a: 1 }), true)
-  t.match(compile('{ /a/+: number }').test({ a: 1,  }), true)
+  t.match(compile('{ /a/+: number }').test({ ab: 1, ac: 1 }), true)
+  t.match(compile('{ /a/+: number }').test({ a: 1, b: 1 }), true)
+  t.match(compile('{ /a/+: number }').test({ ab: 1, ac: 'x' }), false)
+
   t.done()
 })

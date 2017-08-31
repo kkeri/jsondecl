@@ -73,8 +73,8 @@ JSONdecl {
 	Cardinality = "?" | "*" | "+" | "-" | NumericCardinality
 
 	NumericCardinality =
-		| "{" integerPart "}" -- single
-		| "{" integerPart ".." integerPart "}" -- range
+		| "{" natural "}" -- single
+		| "{" natural ".." natural "}" -- range
 
 	ListItem (a list item) = Expression
 
@@ -97,8 +97,8 @@ JSONdecl {
 	identifierStart = "A".."Z" | "a".."z" | "_"
 	identifierPart = identifierStart | digit
 
-	number (a number) = "-"? integerPart ("." fractionalPart)? exponentPart?
-	integerPart = positiveInteger | "0"
+	number (a number) = "-"? natural ("." fractionalPart)? exponentPart?
+	natural = positiveInteger | "0"
 	positiveInteger = nonZeroDigit digit*
 	fractionalPart = digit+
 	exponentPart = ("e" | "E") ("+" | "-")? digit+

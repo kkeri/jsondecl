@@ -187,9 +187,9 @@ export class Object_ extends Expression {
   constructor (propertyList) {
     super()
     this.propertyList = propertyList
-    for (let i = 0; i < propertyList.length; i++) {
-      propertyList[i].index = i
-    }
+    // for (let i = 0; i < propertyList.length; i++) {
+    //   propertyList[i].index = i
+    // }
   }
 
   test (value) {

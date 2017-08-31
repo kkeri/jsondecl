@@ -138,7 +138,8 @@ const modelActions = {
   Property_deny (name, _dash_) {
     return new model.Property(name.model(), new model.Call('any'), 0, 0)
   },
-  Cardinality (c) {
+  Cardinality (card) {
+    let c = card.model()
     switch (c) {
       case '-': return { low: 0, high: 0 }
       case '?': return { low: 0, high: 1 }
@@ -147,6 +148,9 @@ const modelActions = {
       default: return c
     }
   },
+  // Natural (nat) {
+  //   return { low: int.model(), high: int.model() }
+  // },
   NumericCardinality_single (_lbr_, int, _rbr_) {
     return { low: int.model(), high: int.model() }
   },
@@ -161,6 +165,9 @@ const modelActions = {
   },
   number (sign, int, _point_, frac, exp) {
     return new model.Literal(parseFloat(this.source.contents))
+  },
+  natural (chars) {
+    return parseInt(this.source.contents)
   },
   string (quote1, chars, quote2) {
     return chars.source.contents
