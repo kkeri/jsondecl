@@ -153,10 +153,20 @@ test('object', t => {
   t.done()
 })
 
-test('cardinality', t => {
-  t.match(compile('{ "a"- }').test({ a: 1 }), false)
-  t.match(compile('{ "a"- }').test({ a: "a" }), false)
-  t.match(compile('{ "a"- }').test({}), true)
+test('symbolic cardinality', t => {
+  t.match(compile('{ /a/- }').test({}), true)
+  t.match(compile('{ /a/- }').test({ b: 1 }), true)
+  t.match(compile('{ /a/- }').test({ a: 'x' }), false)
+  t.match(compile('{ /a/- }').test({ a: 1 }), false)
+  t.match(compile('{ /a/- }').test({ ab: 1, ac: 1 }), false)
+  t.match(compile('{ /a/- }').test({ a: 1, b: 1 }), false)
+
+  t.match(compile('{ /a/-: number }').test({}), true)
+  t.match(compile('{ /a/-: number }').test({ b: 1 }), true)
+  t.match(compile('{ /a/-: number }').test({ a: 'x' }), false)
+  t.match(compile('{ /a/-: number }').test({ a: 1 }), false)
+  t.match(compile('{ /a/-: number }').test({ ab: 1, ac: 1 }), false)
+  t.match(compile('{ /a/-: number }').test({ a: 1, b: 1 }), false)
 
   t.match(compile('{ /a/?: number }').test({}), true)
   t.match(compile('{ /a/?: number }').test({ b: 1 }), true)
@@ -181,6 +191,33 @@ test('cardinality', t => {
   t.match(compile('{ /a/+: number }').test({ ab: 1, ac: 1 }), true)
   t.match(compile('{ /a/+: number }').test({ a: 1, b: 1 }), true)
   t.match(compile('{ /a/+: number }').test({ ab: 1, ac: 'x' }), false)
+
+  t.done()
+})
+
+test('numeric cardinality', t => {
+  t.match(compile('{ /a/{0}: number }').test({}), true)
+  t.match(compile('{ /a/{0}: number }').test({ b: 1 }), true)
+  t.match(compile('{ /a/{0}: number }').test({ a: 'x' }), false)
+  t.match(compile('{ /a/{0}: number }').test({ a: 1 }), false)
+  t.match(compile('{ /a/{0}: number }').test({ ab: 1, ac: 1 }), false)
+  t.match(compile('{ /a/{0}: number }').test({ a: 1, b: 1 }), false)
+
+  t.match(compile('{ /a/{1}: number }').test({}), false)
+  t.match(compile('{ /a/{1}: number }').test({ b: 1 }), false)
+  t.match(compile('{ /a/{1}: number }').test({ a: 'x' }), false)
+  t.match(compile('{ /a/{1}: number }').test({ a: 1 }), true)
+  t.match(compile('{ /a/{1}: number }').test({ ab: 1, ac: 1 }), false)
+  t.match(compile('{ /a/{1}: number }').test({ a: 1, b: 1 }), true)
+
+  t.match(compile('{ /a/{1..2}: number }').test({}), false)
+  t.match(compile('{ /a/{1..2}: number }').test({ b: 1 }), false)
+  t.match(compile('{ /a/{1..2}: number }').test({ a: 'x' }), false)
+  t.match(compile('{ /a/{1..2}: number }').test({ a: 1 }), true)
+  t.match(compile('{ /a/{1..2}: number }').test({ ab: 1, ac: 1 }), true)
+  t.match(compile('{ /a/{1..2}: number }').test({ ab: 1, ac: 1, ad: 1 }), false)
+  t.match(compile('{ /a/{1..2}: number }').test({ a: 1, b: 1 }), true)
+  t.match(compile('{ /a/{1..2}: number }').test({ ab: 1, ac: 'x' }), false)
 
   t.done()
 })
