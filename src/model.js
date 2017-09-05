@@ -1,3 +1,4 @@
+import { TestContext } from './context'
 
 export class Module {
   constructor (importList, declList) {
@@ -45,7 +46,8 @@ export class Declaration {
   }
 
   test (value) {
-    return this.body.test(value)
+    const tc = new TestContext()
+    return this.body.doTest(tc, value)
   }
 }
 
@@ -58,8 +60,12 @@ export class Expression {
     }
   }
 
-  test (value) {
-    throw new Error(`can't call abstract method`)
+  doEval (tc, value) {
+    throw new Error(`the expression should be used as pattern`)
+  }
+
+  doTest (tc, value) {
+    throw new Error(`the expression can't be used as pattern`)
   }
 }
 
@@ -69,9 +75,9 @@ export class LogicalOr extends Expression {
     this.items = items
   }
 
-  test (value) {
+  doTest (tc, value) {
     for (let item of this.items) {
-      if (item.test(value)) {
+      if (item.doTest(tc, value)) {
         return true
       }
     }
@@ -85,9 +91,9 @@ export class LogicalAnd extends Expression {
     this.items = items
   }
 
-  test (value) {
+  doTest (tc, value) {
     for (let item of this.items) {
-      if (!item.test(value)) {
+      if (!item.doTest(tc, value)) {
         return false
       }
     }
@@ -101,8 +107,8 @@ export class LogicalNot extends Expression {
     this.expr = expr
   }
 
-  test (value) {
-    return !this.expr.test(value)
+  doTest (tc, value) {
+    return !this.expr.doTest(tc, value)
   }
 }
 
@@ -112,19 +118,19 @@ export class Chain extends Expression {
     this.items = items
   }
 
-  eval (value) {
+  doEval (value) {
     for (let item of this.items) {
-      value = item.eval(value)
+      value = item.doEval(value)
     }
     return value
   }
 
-  test (value) {
+  doTest (tc, value) {
     let max = this.items.length - 1
     for (let i = 0; i < max; i++) {
-      value = this.items[i].eval(value)
+      value = this.items[i].doEval(tc, value)
     }
-    return this.items[max].validate(value)
+    return this.items[max].validate(tc, value)
   }
 }
 
@@ -134,12 +140,12 @@ export class Reference extends Expression {
     this.id = id
   }
 
-  eval (base) {
-    return this.pattern.eval(base)
+  doEval (tc) {
+    return this.pattern.doEval(tc)
   }
 
-  test (value) {
-    return this.pattern.test(value)
+  doTest (tc, value) {
+    return this.pattern.doTest(tc, value)
   }
 }
 
@@ -148,14 +154,15 @@ export class Call extends Expression {
     super()
     this.id = id
     this.args = args
+    this.func = undefined
   }
 
-  eval (base) {
-    return this.func.eval.call(null, base, ...this.args.map(i => i.eval(base)))
+  doEval (tc) {
+    return this.func.doEval(tc, this.args)
   }
 
-  test (value) {
-    return this.func.test.call(null, value, ...this.args.map(i => i.eval(value)))
+  doTest (tc, value) {
+    return this.func.doTest(tc, value, this.args)
   }
 }
 
@@ -166,20 +173,20 @@ export class Function_ extends Expression {
     this.body = body
   }
 
-  eval () {
-    return this.value
+  doEval (tc) {
+    return this
   }
 
-  test (value) {
-    this.source.eval()
+  doTest (tc, value, args) {
+    this.source.doEval(tc, value)
   }
 }
 
 export class Custom extends Expression {
-  constructor (eval_, test) {
+  constructor (doEval, doTest) {
     super()
-    this.eval = eval_
-    this.test = test
+    this.deEval = doEval
+    this.doTest = doTest
   }
 }
 
@@ -187,47 +194,17 @@ export class Object_ extends Expression {
   constructor (propertyList) {
     super()
     this.propertyList = propertyList
-    // for (let i = 0; i < propertyList.length; i++) {
-    //   propertyList[i].index = i
-    // }
   }
 
-  test (value) {
+  doTest (tc, value) {
     if (typeof value !== 'object' || value === null || Array.isArray(value)) {
       return false
     }
     for (let prop of this.propertyList) {
-      if (!prop.test(value)) return false
+      if (!prop.doTest(tc, value)) return false
     }
     return true
   }
-
-  // test (value) {
-  //   if (typeof value !== 'object' || value === null || Array.isArray(value)) {
-  //     return false
-  //   }
-  //   let occ = new Array(this.propertyList.length).fill(0)
-  //   // this should be optimized to be nearly linear
-  //   // tip: most property names will be simply strings
-  //   for (let name of Object.getOwnPropertyNames(value)) {
-  //     let match = false
-  //     for (let prop of this.propertyList) {
-  //       if (prop.name.test(name) && prop.value.test(value[name])) {
-  //         match = true
-  //         occ[prop.index]++
-  //       }
-  //     }
-  //     if (!match) {
-  //       return false
-  //     }
-  //   }
-  //   for (let prop of this.propertyList) {
-  //     if (occ[prop.index] < prop.minCount || occ[prop.index] > prop.maxCount) {
-  //       return false
-  //     }
-  //   }
-  //   return true
-  // }
 }
 
 export class Array_ extends Expression {
@@ -236,14 +213,16 @@ export class Array_ extends Expression {
     this.items = items
   }
 
-  test (value) {
+  doTest (tc, value) {
     if (!Array.isArray(value)) {
       return false
     }
     let vidx = 0
     for (let item of this.items) {
       let o = 0
-      while (o < item.maxCount && vidx < value.length && item.test(value[vidx++])) {
+      while (o < item.maxCount &&
+        vidx < value.length && item.doTest(tc, value[vidx++])
+      ) {
         o++
       }
       if (o < item.minCount) {
@@ -265,15 +244,16 @@ export class Property extends Expression {
     this.maxCount = maxCount
   }
 
-  test (value) {
+  doTest (tc, value) {
     // this is checked in the object pattern
     // if (typeof value !== 'object' || value === null || Array.isArray(value)) {
     //   return false
     // }
     let occurs = 0
-    for (let name of Object.getOwnPropertyNames(value)) {
-      if (this.name.test(name)) {
-        if (this.value.test(value[name])) {
+    for (let name in value) {
+      if (this.name.doTest(tc, name)) {
+        if (tc.matchMap) tc.matchMap.add(name)
+        if (this.value.doTest(tc, value[name])) {
           occurs++
         } else {
           return false
@@ -300,11 +280,11 @@ export class Literal extends Expression {
     this.value = value
   }
 
-  eval () {
+  doEval (tc) {
     return this.value
   }
 
-  test (value) {
+  doTest (tc, value) {
     return this.value === value
   }
 }
@@ -316,17 +296,23 @@ export class RegExp_ extends Expression {
     this.flags = flags
   }
 
-  eval () {
+  static fromRegExp (rgx) {
+    let obj = new RegExp_()
+    obj.regexp = rgx
+    return obj
+  }
+
+  doEval (tc) {
     return this.regexp
   }
 
-  test (value) {
+  doTest (tc, value) {
     return this.regexp.test(value)
   }
 }
 
 export class This extends Expression {
-  eval (value) {
-    return value
+  doEval (tc) {
+    return tc.this
   }
 }
