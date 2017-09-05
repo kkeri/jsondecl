@@ -3,13 +3,9 @@
 - unescape string literals
 - make export an optional modifier for declarations
 - imports and automatic default export anywhere in the file
-- property cardinality
-- ellipsis ... to denote an open object pattern
 
 ## model
 
-- remove the abstract class Expression
-- introduce runtime contexts
 
 ## compiler
 
@@ -26,3 +22,9 @@
 - what is the default cardinality for property patterns : 1 or +?
 - what is the default mode on file testing: allow repeated property names?
 
+## perspectives
+
+- uniqueness (sets)
+- default value for absent properties
+- arithmetic expressions and constraints
+- compilation to javascript
