@@ -221,3 +221,13 @@ test('numeric cardinality', t => {
 
   t.done()
 })
+
+test('closed object', t => {
+  t.match(compile('closed({ "a": 1 })').test({}), false)
+  t.match(compile('closed({ "a": 1 })').test({ a: 'x' }), false)
+  t.match(compile('closed({ "a": 1 })').test({ b: 1 }), false)
+  t.match(compile('closed({ "a": 1 })').test({ a: 1 }), true)
+  t.match(compile('closed({ "a": 1 })').test({ a: 1, b: 1 }), false)
+
+  t.done()
+})

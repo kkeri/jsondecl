@@ -92,7 +92,7 @@ test('import', t => {
   })
   t.match(compile('import { regex } from "module/test.js"; 1'), {
     decls: {
-      regex: { body: { eval: null, test: Function } }
+      regex: { body: { regexp: RegExp } }
     }
   })
   t.match(compile('import { nondef } from "module/test.js"; 1'), null)
@@ -318,6 +318,37 @@ test('object', t => {
           {
             name: { value: "c" },
             value: { value: "d" }
+          }
+        ]
+      }
+    }
+  })
+  t.done()
+})
+
+
+test('valid function call', t => {
+  t.match(compile('closed({})'), {
+    defaultExport: {
+      body: {
+        func: { doEval: Function, doTest: Function },
+        args: [
+          {
+            propertyList: []
+          }
+        ]
+      }
+    }
+  })
+  t.match(compile('closed({ "a": 1 })'), {
+    defaultExport: {
+      body: {
+        func: { doEval: Function, doTest: Function },
+        args: [
+          {
+            propertyList: [
+              { name: { value: "a" }, value: { value: 1 }}
+            ]
           }
         ]
       }

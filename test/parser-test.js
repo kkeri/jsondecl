@@ -262,4 +262,14 @@ test('valid cardinality', t => {
   t.done()
 })
 
+test('valid function call', t => {
+  t.notEqual(parse('a()'), null)
+  t.notEqual(parse('a(1)'), null)
+  t.notEqual(parse('a(b)'), null)
+  t.notEqual(parse('a("b")'), null)
+  t.notEqual(parse('a({})'), null)
+  t.notEqual(parse('a(1,b,{})'), null)
+  t.done()
+})
+
 
