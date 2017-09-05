@@ -55,7 +55,7 @@ class CompilerContext {
     }
   }
 
-  declare (id, expr, exported) {
+  addDeclaration (id, expr, exported) {
     if (!id) {
       if (this.module.defaultExport) {
         this.error(`duplicate default export`)
@@ -120,8 +120,8 @@ const builder = {
     }
     for (let item of node.importList) {
       if (item.originalId in donor) {
-        cc.declare(item.localId,
-          compileImport(donor[item.originalId],
+        cc.addDeclaration(item.localId,
+          importValue(donor[item.originalId],
             item.originalId,
             item.localId,
             node.moduleSpec,
@@ -136,7 +136,7 @@ const builder = {
   },
 
   Declaration (node, cc) {
-    cc.declare(node.id, node, node.exported)
+    cc.addDeclaration(node.id, node, node.exported)
     build(node.body, cc)
   },
 
@@ -243,24 +243,12 @@ const resolver = {
  * @param {string} moduleSpec foreign module name for diagnostics
  * @param {function} error emits diagnostic messages
  */
-function compileImport (value, originalId, localId, moduleSpec, error) {
+function importValue (value, originalId, localId, moduleSpec, error) {
   switch (typeof value) {
     case 'function':
-      return new model.Declaration(localId, new model.Custom(null, value))
-    case 'object': {
-      if (typeof value.eval === 'function') {
-        var eval_ = value.eval.bind(value)
-      }
-      if (typeof value.test === 'function') {
-        var test = value.test.bind(value)
-      }
-      if (!eval_ && !test) {
-        error(`${originalId} imported from '${moduleSpec}' must ` +
-          `implement 'eval' or 'test'`)
-        return null
-      }
-      return new model.Declaration(localId, new model.Custom(eval_, test))
-    }
+      return importFunction(value, originalId, localId, moduleSpec, error)
+    case 'object':
+      return importObject(value, originalId, localId, moduleSpec, error)
     case 'number':
     case 'string':
     case 'null':
@@ -273,10 +261,45 @@ function compileImport (value, originalId, localId, moduleSpec, error) {
   }
 }
 
+function importFunction (func, originalId, localId, moduleSpec, error) {
+  return new model.Declaration(localId, new model.Custom(null,
+    (tc, value, args) => args
+     ? func(value, ...args.map(i => i.doEval(tc)))
+     : func(value)
+  ))
+}
+
+function importObject (object, originalId, localId, moduleSpec, error) {
+  if (object instanceof model.Declaration) {
+    return new model.Declaration(localId, object.body)
+  }
+  if (object instanceof RegExp) {
+    return new model.Declaration(localId, model.RegExp_.fromRegExp(object))
+  }
+  if (typeof object.doEval === 'function' &&
+    typeof object.doTest === 'function'
+  ) {
+    return new model.Declaration(localId, object)
+  }
+  let doEval
+  if (typeof object.doEval === 'function') {
+    doEval = object.doEval.bind(object)
+  } else {
+    doEval = () => { throw new Error(`'${localId}' should be used as pattern`) }
+  }
+  let doTest
+  if (typeof object.doTest === 'function') {
+    doTest = object.doTest.bind(object)
+  } else {
+    doTest = () => { throw new Error(`'${localId}' can't be used as pattern`) }
+  }
+  return new model.Declaration(localId, new model.Custom(doEval, doTest))
+}
+
 function compileBuiltins (builtin) {
   let decls = {}
   for (let b in builtin) {
-    decls[b] = compileImport(builtin[b], b, './builtin', _ => null)
+    decls[b] = importValue(builtin[b], b, './builtin', _ => null)
   }
   return decls
 }
