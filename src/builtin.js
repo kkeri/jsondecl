@@ -1,4 +1,3 @@
-import { TestContext } from './context'
 
 export const any = (x) => true
 
@@ -20,11 +19,18 @@ export const ge = (x, y) => number(x) && number(y) && x >= y
 
 export const closed = {
   doTest (tc, value, [pattern]) {
-    tc = new TestContext(tc)
-    tc.matchMap = new Set()
-    if (!pattern.doTest(tc, value)) return false
+    if (!pattern) return false
+    const savedMatchSetDepth = tc.matchSetDepth
+    const savedMatchSet = tc.matchSet
+    const localMatchSet = new Set()
+    tc.matchSet = localMatchSet
+    tc.matchSetDepth = tc.propertyDepth
+    const match = pattern.doTest(tc, value)
+    tc.matchSet = savedMatchSet
+    tc.matchSetDepth = savedMatchSetDepth
+    if (!match) return false
     for (let name in value) {
-      if (!tc.matchMap.has(name)) return false
+      if (!localMatchSet.has(name)) return false
     }
     return true
   }

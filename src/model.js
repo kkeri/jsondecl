@@ -252,8 +252,13 @@ export class Property extends Expression {
     let occurs = 0
     for (let name in value) {
       if (this.name.doTest(tc, name)) {
-        if (tc.matchMap) tc.matchMap.add(name)
-        if (this.value.doTest(tc, value[name])) {
+        if (tc.matchSetDepth === tc.propertyDepth) {
+          tc.matchSet.add(name)
+        }
+        tc.propertyDepth++
+        const propMatch = this.value.doTest(tc, value[name])
+        tc.propertyDepth--
+        if (propMatch) {
           occurs++
         } else {
           return false
