@@ -12,3 +12,7 @@ I conclude that the only favorable way a callee should depend on its caller
 is through function parameters. This way names are always resolved in the
 lexical context (i.e. in the same module).
 
+It's also preferred that global names are not injected into the module but
+properly imported.
+
+
