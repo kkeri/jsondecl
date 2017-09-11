@@ -324,7 +324,6 @@ test('closed expression', t => {
 })
 
 test('closed nested object', t => {
-
   t.match(compile('closed({ "a": { "b": 2 } })').test({}), false)
   t.match(compile('closed({ "a": { "b": 2 } })').test({ a: 'x' }), false)
   t.match(compile('closed({ "a": { "b": 2 } })').test({ b: 2 }), false)
@@ -332,6 +331,21 @@ test('closed nested object', t => {
   t.match(compile('closed({ "a": { "b": 2 } })').test({ a: { b: 2 }, b: 1 }), false)
   t.match(compile('closed({ "a": { "b": 2 } })').test({ a: { b: 2 }, c: 1 }), false)
   t.match(compile('closed({ "a": { "b": 2 } })').test({ a: 1, b: 1 }), false)
+
+  t.done()
+})
+
+test('let...in', t => {
+  t.match(compile('let a = 1 in a').test(0), false)
+  t.match(compile('let a = 1 in a').test(1), true)
+  t.match(compile('let a = 1 in 2').test(2), true)
+  t.match(compile('const x = 1; let a = x in a').test(0), false)
+  t.match(compile('const x = 1; let a = x in a').test(1), true)
+  t.match(compile('const a = 1; let b = a in let c = b in c').test(0), false)
+  t.match(compile('const a = 1; let b = a in let c = b in c').test(1), true)
+  t.match(compile('export default let b = a in let c = b in c; const a = 1').test(1), true)
+  t.match(compile('let b = 1, c = b in c').test(1), true)
+  t.match(compile('let c = b, b = 1 in c').test(1), true)
 
   t.done()
 })

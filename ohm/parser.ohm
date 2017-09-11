@@ -28,7 +28,9 @@ JSONdecl {
 
 	// expressions
 
-	Expression = LogicalOr
+	Expression = LetIn | LogicalOr
+
+	LetIn = "let" LocalDeclarationList "in" Expression
 
 	LogicalOr = NonemptyListOf<LogicalAnd, "|">
 
@@ -64,6 +66,10 @@ JSONdecl {
 	String = string
 
 	// helpers
+
+	LocalDeclarationList = NonemptyListOf<LocalDeclaration, ",">
+
+	LocalDeclaration = identifier "=" Expression
 
 	Property (a property) =
 		| Expression Cardinality ":" Expression -- cardinality

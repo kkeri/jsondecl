@@ -76,6 +76,12 @@ const modelActions = {
 
   // expression
 
+  LetIn (_let_, decls, _in_, body) {
+    return new model.LocalEnvironment(decls.asIteration().model(), body.model())
+  },
+  LocalDeclaration (id, _eq_, expr) {
+    return new model.Declaration(id.model(), expr.model(), false)
+  },
   LogicalOr (list) {
     let items = list.asIteration().model()
     if (items.length === 1) {

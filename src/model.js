@@ -4,7 +4,6 @@ export class Module {
   constructor (importList, declList) {
     this.importList = importList
     this.declList = declList
-    this.decls = {}
     this.exports = {}
     this.defaultExport = undefined
   }
@@ -46,7 +45,11 @@ export class Declaration {
   }
 
   test (value) {
-    const tc = new TestContext()
+    if (!this.env) {
+      throw new Error(`a declaration in a parametric environment can't ` +
+      `be tested independently`)
+    }
+    const tc = new TestContext(this.env)
     return this.body.doTest(tc, value)
   }
 }
@@ -66,6 +69,26 @@ export class Expression {
 
   doTest (tc, value) {
     throw new Error(`the expression can't be used as pattern`)
+  }
+}
+
+export class LocalEnvironment extends Expression {
+  constructor (declList, body) {
+    super()
+    this.declList = declList
+    this.body = body
+  }
+
+  doTest (tc, value) {
+    let savedEnv = tc.env
+    if (this.env) {
+      tc.env = this.env
+    } else {
+      tc.env = Object.assign(Object.create(tc.env), this.staticEnv)
+    }
+    let result = this.body.doTest(tc, value)
+    tc.env = savedEnv
+    return result
   }
 }
 
@@ -141,11 +164,13 @@ export class Reference extends Expression {
   }
 
   doEval (tc) {
-    return this.pattern.doEval(tc)
+    let expr = tc.env[this.id].body
+    return expr.doEval(tc)
   }
 
   doTest (tc, value) {
-    return this.pattern.doTest(tc, value)
+    let expr = tc.env[this.id].body
+    return expr.doTest(tc, value)
   }
 }
 
@@ -158,11 +183,13 @@ export class Call extends Expression {
   }
 
   doEval (tc) {
-    return this.func.doEval(tc, this.args)
+    let func = tc.env[this.id].body
+    return func.doEval(tc, this.args)
   }
 
   doTest (tc, value) {
-    return this.func.doTest(tc, value, this.args)
+    let func = tc.env[this.id].body
+    return func.doTest(tc, value, this.args)
   }
 }
 

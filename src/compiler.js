@@ -15,7 +15,6 @@ export function compile (str, opts = {}) {
     error: opts.error
   })
   if (!module_) return null
-  module_.decls = Object.assign({}, builtins)
   const cc = new CompilerContext(module_, {
     error: opts.error || function () {},
     importPath: dirname(opts.filename)
@@ -33,42 +32,45 @@ class CompilerContext {
     this.opts = opts
     this.errors = 0
     this.exportCount = 0
-    this.envStack = []
-    this.currentBlock = undefined
+    this.dynamicDepth = 0
+    this.env = builtins
   }
 
-  enter (block) {
-    this.envStack.push(this.currentBlock)
-    this.currentBlock = block
+  createEnv () {
+    this.env = Object.create(this.env)
+    return this.env
   }
 
-  leave () {
-    this.currentBlock = this.envStack.pop()
+  enterEnv (env) {
+    this.env = env
+  }
+
+  leaveEnv () {
+    this.env = Object.getPrototypeOf(this.env)
   }
 
   lookup (id) {
-    let decl = this.currentBlock.decls[id]
-    if (decl) {
-      return decl.body
+    if (id in this.env) {
+      return this.env[id].body
     } else {
       this.error(`${id}: undeclared identifier`)
     }
   }
 
-  addDeclaration (id, expr, exported) {
-    if (!id) {
+  addDeclaration (decl, exported) {
+    if (!decl.id) {
       if (this.module.defaultExport) {
         this.error(`duplicate default export`)
       } else {
-        this.module.defaultExport = expr
+        this.module.defaultExport = decl
         this.exportCount++
       }
-    } else if (id in this.currentBlock.decls) {
-      this.error(`${id}: duplicate identifier`)
+    } else if (this.env.hasOwnProperty(decl.id)) {
+      this.error(`${decl.id}: duplicate identifier`)
     } else {
-      this.currentBlock.decls[id] = expr
+      this.env[decl.id] = decl
       if (exported) {
-        this.module.exports[id] = expr
+        this.module.exports[decl.id] = decl
         this.exportCount++
       }
     }
@@ -90,14 +92,14 @@ function build (node, cc) {
 const builder = {
 
   Module (node, cc) {
-    cc.enter(node)
+    node.env = cc.createEnv()
     for (let import_ of node.importList) {
       build(import_, cc)
     }
     for (let decl of node.declList) {
       build(decl, cc)
     }
-    cc.leave()
+    cc.leaveEnv()
     if (!cc.exportCount) {
       cc.error(`module should export at least one declaration`)
     }
@@ -120,8 +122,7 @@ const builder = {
     }
     for (let item of node.importList) {
       if (item.originalId in donor) {
-        cc.addDeclaration(item.localId,
-          importValue(donor[item.originalId],
+        cc.addDeclaration(importValue(donor[item.originalId],
             item.originalId,
             item.localId,
             node.moduleSpec,
@@ -136,8 +137,19 @@ const builder = {
   },
 
   Declaration (node, cc) {
-    cc.addDeclaration(node.id, node, node.exported)
+    if (cc.dynamicDepth === 0) node.env = cc.env
+    cc.addDeclaration(node, node.exported)
     build(node.body, cc)
+  },
+
+  LocalEnvironment (node, cc) {
+    node.staticEnv = cc.createEnv()
+    if (cc.dynamicDepth === 0) node.env = node.staticEnv
+    for (let decl of node.declList) {
+      build(decl, cc)
+    }
+    build(node.body, cc)
+    cc.leaveEnv()
   },
 
   LogicalOr (node, cc) {
@@ -179,7 +191,7 @@ const builder = {
 }
 
 /**
- * A compilation step that binds names to their declarations.
+ * A compilation step that checks validity of identifier references.
  */
 function resolve (node, cc) {
   let method = resolver[node.constructor.name]
@@ -188,16 +200,25 @@ function resolve (node, cc) {
 const resolver = {
 
   Module (node, cc) {
-    cc.enter(node)
+    cc.enterEnv(node.env)
     for (let decl of node.declList) {
       resolve(decl, cc)
     }
-    cc.leave()
+    cc.leaveEnv()
   },
 
   Declaration (node, cc) {
     resolve(node.body, cc)
     return node
+  },
+
+  LocalEnvironment (node, cc) {
+    cc.enterEnv(node.staticEnv)
+    for (let decl of node.declList) {
+      resolve(decl, cc)
+    }
+    resolve(node.body, cc)
+    cc.leaveEnv()
   },
 
   LogicalOr (node, cc) {
@@ -213,11 +234,11 @@ const resolver = {
   },
 
   Reference (node, cc) {
-    node.pattern = cc.lookup(node.id)
+    cc.lookup(node.id)
   },
 
   Call (node, cc) {
-    node.func = cc.lookup(node.id)
+    cc.lookup(node.id)
     node.args.forEach(i => resolve(i, cc))
   },
 
@@ -257,7 +278,7 @@ function importValue (value, originalId, localId, moduleSpec, error) {
     default:
       error(`${originalId} imported from '${moduleSpec}' has` +
         `illegal type '${typeof value}'`)
-      return null
+      return new model.Declaration(localId, new model.Literal(value))
   }
 }
 

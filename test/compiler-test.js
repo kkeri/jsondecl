@@ -67,7 +67,7 @@ test('identifier', t => {
   t.match(compile('const a = 1; a'), {
     defaultExport: {
       body: {
-        pattern: { value: 1 }
+        // pattern: { value: 1 }
       }
     }
   })
@@ -76,22 +76,22 @@ test('identifier', t => {
 
 test('import', t => {
   t.match(compile('import { } from "module/test.js"; 1'), {
-    decls: {
+    env: {
     }
   })
   t.match(compile('import { a } from "module/test.js"; 1'), {
-    decls: {
+    env: {
       a: { body: { value: 3 } },
     }
   })
   t.match(compile('import { a, b } from "module/test.js"; 1'), {
-    decls: {
+    env: {
       a: { body: { value: 3 } },
       b: { body: { value: 99 } },
     }
   })
   t.match(compile('import { regex } from "module/test.js"; 1'), {
-    decls: {
+    env: {
       regex: { body: { regexp: RegExp } }
     }
   })
@@ -104,12 +104,12 @@ test('import', t => {
 
 test('import rename', t => {
   t.match(compile('import { a as x } from "module/test.js"; 1'), {
-    decls: {
+    env: {
       x: { body: { value: 3 } },
     }
   })
   t.match(compile('import { a as x, b } from "module/test.js"; 1'), {
-    decls: {
+    env: {
       x: { body: { value: 3 } },
       b: { body: { value: 99 } },
     }
@@ -119,7 +119,7 @@ test('import rename', t => {
 
 test('const', t => {
   t.match(compile('export const a = 1'), {
-    decls: {
+    env: {
       a: {
         body: {
           value: 1
@@ -136,7 +136,7 @@ test('const', t => {
     defaultExport: null
   })
   t.match(compile('export const a = 1; 2'), {
-    decls: {  
+    env: {  
       a: {
         body: { value: 1 }
       }
@@ -152,7 +152,7 @@ test('const', t => {
   })
   t.match(compile('const a = 1; const a = 2'), null)
   t.match(compile('export const a = 1; const b = 2'), {
-    decls: {
+    env: {
       a: {
         body: { value: 1 }
       },
@@ -168,7 +168,7 @@ test('const', t => {
     defaultExport: null
   })
   t.match(compile('export const a = 1 | 2'), {
-    decls: {
+    env: {
       a: {
         body: {
           items: [
@@ -326,12 +326,11 @@ test('object', t => {
   t.done()
 })
 
-
 test('valid function call', t => {
   t.match(compile('closed({})'), {
     defaultExport: {
       body: {
-        func: { doEval: Function, doTest: Function },
+        // func: { doEval: Function, doTest: Function },
         args: [
           {
             propertyList: []
@@ -343,7 +342,7 @@ test('valid function call', t => {
   t.match(compile('closed({ "a": 1 })'), {
     defaultExport: {
       body: {
-        func: { doEval: Function, doTest: Function },
+        // func: { doEval: Function, doTest: Function },
         args: [
           {
             propertyList: [
@@ -351,6 +350,41 @@ test('valid function call', t => {
             ]
           }
         ]
+      }
+    }
+  })
+  t.done()
+})
+
+test('let...in', t => {
+  t.match(compile('let a = 1 in b'), null)
+  t.match(compile('let a = 1 in a'), {
+    defaultExport: {
+      body: {
+        env: {
+          a: { body: { value: 1 }}
+        },
+        body: { id: 'a' }
+      }
+    }
+  })
+  t.match(compile('const x = 1; let a = x in a'), {
+    defaultExport: {
+      body: {
+        env: {
+          a: { body: { id: 'x' }}
+        },
+        body: { id: 'a' }
+      }
+    }
+  })
+  t.match(compile('export default let a = x in a; const x = 1'), {
+    defaultExport: {
+      body: {
+        env: {
+          a: { body: { id: 'x' }}
+        },
+        body: { id: 'a' }
       }
     }
   })

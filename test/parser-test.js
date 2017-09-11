@@ -272,4 +272,19 @@ test('valid function call', t => {
   t.done()
 })
 
+test('invalid let...in', t => {
+  t.equal(parse('let in a'), null)
+  t.equal(parse('let 1 in a'), null)
+  t.equal(parse('let a = 1'), null)
+  t.equal(parse('let a = 1 in'), null)
+  t.done()
+})
+
+test('valid let...in', t => {
+  t.notEqual(parse('let a = 1 in a'), null)
+  t.notEqual(parse('let a = 1, b = 2 in a'), null)
+  t.notEqual(parse('let a = 1, b = 2 in let c = 3 in a'), null)
+  t.done()
+})
+
 
