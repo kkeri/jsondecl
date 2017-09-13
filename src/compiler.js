@@ -57,21 +57,23 @@ class CompilerContext {
     }
   }
 
-  addDeclaration (decl, exported) {
-    if (!decl.id) {
+  bind (id, value) {
+    if (this.env.hasOwnProperty(id)) {
+      this.error(`${id}: duplicate identifier`)
+    } else {
+      this.env[id] = value
+    }
+  }
+
+  export (node) {
+    this.exportCount++
+    if (node instanceof model.Const) {
+      this.module.exports[node.id] = node.body
+    } else {
       if (this.module.defaultExport) {
         this.error(`duplicate default export`)
       } else {
-        this.module.defaultExport = decl
-        this.exportCount++
-      }
-    } else if (this.env.hasOwnProperty(decl.id)) {
-      this.error(`${decl.id}: duplicate identifier`)
-    } else {
-      this.env[decl.id] = decl
-      if (exported) {
-        this.module.exports[decl.id] = decl
-        this.exportCount++
+        this.module.defaultExport = node
       }
     }
   }
@@ -93,9 +95,6 @@ const builder = {
 
   Module (node, cc) {
     node.env = cc.createEnv()
-    for (let import_ of node.importList) {
-      build(import_, cc)
-    }
     for (let decl of node.declList) {
       build(decl, cc)
     }
@@ -122,7 +121,7 @@ const builder = {
     }
     for (let item of node.importList) {
       if (item.originalId in donor) {
-        cc.addDeclaration(importValue(donor[item.originalId],
+        cc.bind(item.localId, importValue(donor[item.originalId],
             item.originalId,
             item.localId,
             node.moduleSpec,
@@ -136,9 +135,14 @@ const builder = {
     }
   },
 
-  Declaration (node, cc) {
+  Export (node, cc) {
+    cc.export(node.body)
+    build(node.body, cc)
+  },
+
+  Const (node, cc) {
     if (cc.dynamicDepth === 0) node.env = cc.env
-    cc.addDeclaration(node, node.exported)
+    cc.bind(node.id, node.body)
     build(node.body, cc)
   },
 
@@ -201,21 +205,19 @@ const resolver = {
 
   Module (node, cc) {
     cc.enterEnv(node.env)
-    for (let decl of node.declList) {
-      resolve(decl, cc)
+    for (let key of Object.keys(cc.env)) {
+      resolve(cc.env[key], cc)
+    }
+    if (node.defaultExport) {
+      resolve(node.defaultExport, cc)
     }
     cc.leaveEnv()
   },
 
-  Declaration (node, cc) {
-    resolve(node.body, cc)
-    return node
-  },
-
   LocalEnvironment (node, cc) {
     cc.enterEnv(node.staticEnv)
-    for (let decl of node.declList) {
-      resolve(decl, cc)
+    for (let key of Object.keys(cc.env)) {
+      resolve(cc.env[key], cc)
     }
     resolve(node.body, cc)
     cc.leaveEnv()
@@ -274,33 +276,30 @@ function importValue (value, originalId, localId, moduleSpec, error) {
     case 'string':
     case 'null':
     case 'boolean':
-      return new model.Declaration(localId, new model.Literal(value))
+      return new model.Literal(value)
     default:
       error(`${originalId} imported from '${moduleSpec}' has` +
         `illegal type '${typeof value}'`)
-      return new model.Declaration(localId, new model.Literal(value))
+      return new model.Literal(value)
   }
 }
 
 function importFunction (func, originalId, localId, moduleSpec, error) {
-  return new model.Declaration(localId, new model.Custom(null,
+  return new model.Custom(null,
     (tc, value, args) => args
      ? func(value, ...args.map(i => i.doEval(tc)))
      : func(value)
-  ))
+  )
 }
 
 function importObject (object, originalId, localId, moduleSpec, error) {
-  if (object instanceof model.Declaration) {
-    return new model.Declaration(localId, object.body)
-  }
   if (object instanceof RegExp) {
-    return new model.Declaration(localId, model.RegExp_.fromRegExp(object))
+    return model.RegExp_.fromRegExp(object)
   }
   if (typeof object.doEval === 'function' &&
     typeof object.doTest === 'function'
   ) {
-    return new model.Declaration(localId, object)
+    return object
   }
   let doEval
   if (typeof object.doEval === 'function') {
@@ -314,7 +313,7 @@ function importObject (object, originalId, localId, moduleSpec, error) {
   } else {
     doTest = () => { throw new Error(`'${localId}' can't be used as pattern`) }
   }
-  return new model.Declaration(localId, new model.Custom(doEval, doTest))
+  return new model.Custom(doEval, doTest)
 }
 
 function compileBuiltins (builtin) {

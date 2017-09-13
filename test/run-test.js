@@ -7,7 +7,7 @@ const model = require('../lib/model')
 function compile(str) {
   return _compile(str, {
     filename: __filename,
-    error: (str) => console.log(str)
+    // error: (str) => console.log(str)
   })
 }
 

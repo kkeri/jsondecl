@@ -3,11 +3,14 @@ JSONdecl {
 
 	// module
 
-	Module =
-		| Import* Declaration* ~Declarator Expression #term -- def
-		| Import* Declaration* -- nodef
+	Module = Declaration*
 
-	Import =
+	Declaration =
+		| ImportDeclaration
+		| ExportDeclaration
+		| ConstDeclaration
+
+	ImportDeclaration =
 		| "import" ImportClause "from" string #term -- list
 
 	ImportClause =
@@ -21,16 +24,22 @@ JSONdecl {
 		| identifier "as" identifier -- rename
 		| identifier -- simple
 
-	Declaration =
-		| "const" identifier "=" Expression #term -- const
-		| "export" "const" identifier "=" Expression #term -- export_const
-		| "export" "default" Expression #term -- export_default
+	ExportDeclaration =
+		| "export" ConstDeclaration -- const
+		| "export" "default" Expression #term -- default
+		| ~DeclarationKeyword Expression #term -- bare
+
+	ConstDeclaration = "const" DeclarationItem #term
+
+	DeclarationList = NonemptyListOf<DeclarationItem, ",">
+
+	DeclarationItem = identifier "=" Expression
 
 	// expressions
 
 	Expression = LetIn | LogicalOr
 
-	LetIn = "let" LocalDeclarationList "in" Expression
+	LetIn = "let" DeclarationList "in" Expression
 
 	LogicalOr = NonemptyListOf<LogicalAnd, "|">
 
@@ -67,10 +76,6 @@ JSONdecl {
 
 	// helpers
 
-	LocalDeclarationList = NonemptyListOf<LocalDeclaration, ",">
-
-	LocalDeclaration = identifier "=" Expression
-
 	Property (a property) =
 		| Expression Cardinality ":" Expression -- cardinality
 		| Expression ":" Expression -- default
@@ -84,7 +89,7 @@ JSONdecl {
 
 	ListItem (a list item) = Expression
 
-	Declarator = "import" | "export" | "const"
+	DeclarationKeyword = "import" | "export" | "const"
 
 	// lexical rules
 

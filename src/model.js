@@ -1,24 +1,24 @@
 import { TestContext } from './context'
 
 export class Module {
-  constructor (importList, declList) {
-    this.importList = importList
+  constructor (declList) {
     this.declList = declList
     this.exports = {}
     this.defaultExport = undefined
   }
 
   test (value, id = '') {
+    const tc = new TestContext(this.env)
     if (id === '') {
       if (!this.defaultExport) {
         throw new Error('attempt to test against the default declaration but it is not declared')
       }
-      return this.defaultExport.test(value)
+      return this.defaultExport.doTest(tc, value)
     } else {
       if (!(id in this.exports)) {
         throw new Error(`attempt to test against '${id}' but it is not declared`)
       }
-      return this.exports[id].test(value)
+      return this.exports[id].doTest(tc, value)
     }
   }
 }
@@ -37,11 +37,16 @@ export class ImportSpecifier {
   }
 }
 
-export class Declaration {
+export class Export {
+  constructor (body) {
+    this.body = body
+  }
+}
+
+export class Const {
   constructor (id, body, exported) {
     this.id = id
     this.body = body
-    this.exported = exported
   }
 
   test (value) {
@@ -164,12 +169,12 @@ export class Reference extends Expression {
   }
 
   doEval (tc) {
-    let expr = tc.env[this.id].body
+    let expr = tc.env[this.id]
     return expr.doEval(tc)
   }
 
   doTest (tc, value) {
-    let expr = tc.env[this.id].body
+    let expr = tc.env[this.id]
     return expr.doTest(tc, value)
   }
 }
@@ -183,12 +188,12 @@ export class Call extends Expression {
   }
 
   doEval (tc) {
-    let func = tc.env[this.id].body
+    let func = tc.env[this.id]
     return func.doEval(tc, this.args)
   }
 
   doTest (tc, value) {
-    let func = tc.env[this.id].body
+    let func = tc.env[this.id]
     return func.doTest(tc, value, this.args)
   }
 }

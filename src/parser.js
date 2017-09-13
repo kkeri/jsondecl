@@ -36,17 +36,13 @@ const modelActions = {
 
   // module
 
-  Module_nodef (imports, decls) {
-    return new model.Module(imports.model(), decls.model())
-  },
-  Module_def (imports, decls, expr, term) {
-    let defExp = new model.Declaration('', expr.model(), true)
-    return new model.Module(imports.model(), decls.model().concat(defExp))
+  Module (decls) {
+    return new model.Module(decls.model())
   },
 
   // import
 
-  Import_list (_imp_, items, _from_, moduleSpec, term) {
+  ImportDeclaration_list (_imp_, items, _from_, moduleSpec, term) {
     return new model.Import(moduleSpec.model(), items.model())
   },
   NamedImports_empty (_lbr_, _rbr_) {
@@ -62,25 +58,34 @@ const modelActions = {
     return new model.ImportSpecifier(origId.model(), localId.model())
   },
 
-  // declaration
+  // export
 
-  Declaration_const (_const_, id, _eq_, expr, term) {
-    return new model.Declaration(id.model(), expr.model(), false)
+  ExportDeclaration_const (_exp_, _const_) {
+    return new model.Export(_const_.model())
   },
-  Declaration_export_const (_exp_, _const_, id, _eq_, expr, term) {
-    return new model.Declaration(id.model(), expr.model(), true)
+  ExportDeclaration_default (_exp_, _def_, expr, term) {
+    return new model.Export(expr.model())
   },
-  Declaration_export_default (_exp_, _def_, expr, term) {
-    return new model.Declaration('', expr.model(), true)
+  ExportDeclaration_bare (expr, term) {
+    return new model.Export(expr.model())
+  },
+
+  // const
+
+  ConstDeclaration (_const_, list, term) {
+    return list.model()
+  },
+  DeclarationList (list) {
+    return list.asIteration().model()
+  },
+  DeclarationItem (id, _eq_, expr) {
+    return new model.Const(id.model(), expr.model())
   },
 
   // expression
 
   LetIn (_let_, decls, _in_, body) {
     return new model.LocalEnvironment(decls.asIteration().model(), body.model())
-  },
-  LocalDeclaration (id, _eq_, expr) {
-    return new model.Declaration(id.model(), expr.model(), false)
   },
   LogicalOr (list) {
     let items = list.asIteration().model()

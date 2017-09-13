@@ -5,7 +5,7 @@ const _parse = require('../lib/parser').parse
 
 function parse (str) {
   return _parse(str, {
-    error: (str) => console.error('\n', str)
+    // error: (str) => console.error('\n', str)
   })
 }
 
