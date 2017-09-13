@@ -14,5 +14,3 @@ lexical context (i.e. in the same module).
 
 It's also preferred that global names are not injected into the module but
 properly imported.
-
-
