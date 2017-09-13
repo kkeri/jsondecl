@@ -14,7 +14,7 @@ Sunday lunch must contain at least three courses.
 
 Describe a graph by listing nodes (an object) and edges (a list of objects).
 An edge is given as a pair of node names. Both endpoints of an edge must be
-an existing node.
+existing nodes.
 Optionally disallow edges whose both endpoints are the same.
 What if the json data contains an array of graphs?
 
