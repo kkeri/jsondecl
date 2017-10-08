@@ -99,12 +99,24 @@ export class LogicalOr extends Expression {
   }
 
   doTest (tc, value) {
-    for (let item of this.items) {
-      if (item.doTest(tc, value)) {
-        return true
+    if (tc.matchSet) {
+      let savedMatchSet = tc.matchSet
+      let result = false
+      for (let item of this.items) {
+        tc.matchSet = {}
+        if (item.doTest(tc, value)) {
+          result = true
+          for (let name in tc.matchSet) savedMatchSet[name] = true
+        }
       }
+      tc.matchSet = savedMatchSet
+      return result
+    } else {
+      for (let item of this.items) {
+        if (item.doTest(tc, value)) return true
+      }
+      return false
     }
-    return false
   }
 }
 
@@ -131,7 +143,11 @@ export class LogicalNot extends Expression {
   }
 
   doTest (tc, value) {
-    return !this.expr.doTest(tc, value)
+    var savedMatchSet = tc.matchSet
+    tc.matchSet = null
+    var result = !this.expr.doTest(tc, value)
+    tc.matchSet = savedMatchSet
+    return result
   }
 }
 
@@ -279,12 +295,13 @@ export class Property extends Expression {
     let occurs = 0
     for (let name in value) {
       if (this.name.doTest(tc, name)) {
-        if (tc.matchSetDepth === tc.propertyDepth) {
-          tc.matchSet.add(name)
+        if (tc.matchSet) {
+          tc.matchSet[name] = true
         }
-        tc.propertyDepth++
+        let savedMatchSet = tc.matchSet
+        tc.matchSet = null
         const propMatch = this.value.doTest(tc, value[name])
-        tc.propertyDepth--
+        tc.matchSet = savedMatchSet
         if (propMatch) {
           occurs++
         } else {
