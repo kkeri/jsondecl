@@ -99,24 +99,18 @@ export class LogicalOr extends Expression {
   }
 
   doTest (tc, value) {
-    if (tc.matchSet) {
-      let savedMatchSet = tc.matchSet
-      let result = false
-      for (let item of this.items) {
-        tc.matchSet = {}
-        if (item.doTest(tc, value)) {
-          result = true
-          for (let name in tc.matchSet) savedMatchSet[name] = true
-        }
+    let result = false
+    for (let item of this.items) {
+      tc.begin()
+      if (item.doTest(tc, value)) {
+        tc.commit()
+        result = true
+        // todo: continue iteration only if unique or closed is in effect
+      } else {
+        tc.rollback()
       }
-      tc.matchSet = savedMatchSet
-      return result
-    } else {
-      for (let item of this.items) {
-        if (item.doTest(tc, value)) return true
-      }
-      return false
     }
+    return result
   }
 }
 
@@ -293,19 +287,29 @@ export class Property extends Expression {
     //   return false
     // }
     let occurs = 0
-    for (let name in value) {
-      if (this.name.doTest(tc, name)) {
-        if (tc.matchSet) {
-          tc.matchSet[name] = true
+    if (tc.tr.matchSet) {
+      for (let name in value) {
+        if (this.name.doTest(tc, name)) {
+          tc.tr.matchSet[name] = true
+          let savedMatchSet = tc.tr.matchSet
+          tc.tr.matchSet = null
+          const match = this.value.doTest(tc, value[name])
+          tc.tr.matchSet = savedMatchSet
+          if (match) {
+            occurs++
+          } else {
+            return false
+          }
         }
-        let savedMatchSet = tc.matchSet
-        tc.matchSet = null
-        const propMatch = this.value.doTest(tc, value[name])
-        tc.matchSet = savedMatchSet
-        if (propMatch) {
-          occurs++
-        } else {
-          return false
+      }
+    } else {
+      for (let name in value) {
+        if (this.name.doTest(tc, name)) {
+          if (this.value.doTest(tc, value[name])) {
+            occurs++
+          } else {
+            return false
+          }
         }
       }
     }
