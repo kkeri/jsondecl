@@ -137,10 +137,9 @@ export class LogicalNot extends Expression {
   }
 
   doTest (tc, value) {
-    var savedMatchSet = tc.matchSet
-    tc.matchSet = null
+    tc.begin()
     var result = !this.expr.doTest(tc, value)
-    tc.matchSet = savedMatchSet
+    tc.rollback()
     return result
   }
 }
