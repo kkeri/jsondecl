@@ -221,7 +221,7 @@ export class Function_ extends Expression {
 export class Custom extends Expression {
   constructor (doEval, doTest) {
     super()
-    this.deEval = doEval
+    this.doEval = doEval
     this.doTest = doTest
   }
 }
