@@ -51,7 +51,7 @@ class CompilerContext {
 
   lookup (id) {
     if (id in this.env) {
-      return this.env[id].body
+      return this.env[id]
     } else {
       this.error(`${id}: undeclared identifier`)
     }
@@ -139,7 +139,7 @@ const builder = {
   Declaration (node, cc) {
     if (cc.dynamicDepth === 0) node.env = cc.env
     cc.addDeclaration(node, node.exported)
-    build(node.body, cc)
+    build(node.expr, cc)
   },
 
   LocalEnvironment (node, cc) {
@@ -208,7 +208,7 @@ const resolver = {
   },
 
   Declaration (node, cc) {
-    resolve(node.body, cc)
+    resolve(node.expr, cc)
     return node
   },
 
@@ -292,7 +292,7 @@ function importFunction (func, originalId, localId, moduleSpec, error) {
 
 function importObject (object, originalId, localId, moduleSpec, error) {
   if (object instanceof model.Declaration) {
-    return new model.Declaration(localId, object.body)
+    return new model.Declaration(localId, object.expr)
   }
   if (object instanceof RegExp) {
     return new model.Declaration(localId, model.RegExp_.fromRegExp(object))

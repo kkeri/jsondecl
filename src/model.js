@@ -38,19 +38,30 @@ export class ImportSpecifier {
 }
 
 export class Declaration {
-  constructor (id, body, exported) {
+  constructor (id, expr, exported) {
     this.id = id
-    this.body = body
+    this.expr = expr
     this.exported = exported
   }
 
-  test (value) {
+  test (value, args) {
     if (!this.env) {
       throw new Error(`a declaration in a parametric environment can't ` +
       `be tested independently`)
     }
     const tc = new TestContext(this.env)
-    return this.body.doTest(tc, value)
+    return this.doTest(tc, value, args)
+  }
+
+  doEval (tc) {
+    if (!('value' in this)) {
+      this.value = this.expr.doEval(tc)
+    }
+    return this.value
+  }
+
+  doTest (tc, value, args) {
+    return this.expr.doTest(tc, value, args)
   }
 }
 
@@ -173,13 +184,13 @@ export class Reference extends Expression {
   }
 
   doEval (tc) {
-    let expr = tc.env[this.id].body
+    let expr = tc.env[this.id]
     return expr.doEval(tc)
   }
 
-  doTest (tc, value) {
-    let expr = tc.env[this.id].body
-    return expr.doTest(tc, value)
+  doTest (tc, value, args) {
+    let expr = tc.env[this.id]
+    return expr.doTest(tc, value, args)
   }
 }
 
@@ -192,12 +203,12 @@ export class Call extends Expression {
   }
 
   doEval (tc) {
-    let func = tc.env[this.id].body
+    let func = tc.env[this.id]
     return func.doEval(tc, this.args)
   }
 
   doTest (tc, value) {
-    let func = tc.env[this.id].body
+    let func = tc.env[this.id]
     return func.doTest(tc, value, this.args)
   }
 }

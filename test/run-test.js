@@ -356,3 +356,12 @@ test('let...in', t => {
 
   t.done()
 })
+
+test('unique', t => {
+  t.match(compile('const s = newSet; 1').test(1), true)
+  t.match(compile('const s = newSet; { "a": unique(s) }').test({ a: 1 }), true)
+  t.match(compile('const s = newSet; { "a": unique(s), "b": unique(s) }').test({ a: 1, b: 1 }), false)
+  // t.match(compile('const s = newSet; { "a": unique(s), "b": unique(s) }').test({ a: 1, b: 2 }), true)
+
+  t.done()
+})
