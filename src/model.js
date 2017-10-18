@@ -244,7 +244,7 @@ export class NativePattern extends Expression {
   call (tc, args) {
     args = args.map(arg => arg.doEval(tc).getNativeValue(tc))
     return new NativeMacro({
-      doTest: (tc, value) => this.fn(value, ...args)
+      doTest: (tc, value) => this.fn.call(tc, value, ...args)
     })
   }
 
