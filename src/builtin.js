@@ -1,5 +1,5 @@
 import { TransactionalSet } from './set'
-import * as model from './model'
+import { Expression } from './model'
 
 export const any = (x) => true
 
@@ -27,13 +27,13 @@ export const closed = {
   call (tc, [pattern]) {
     if (!pattern) {
       tc.error(`closed requires a pattern argument`)
-      return new model.Expression()
+      return new Expression()
     }
     return new ClosedPattern(pattern)
   }
 }
 
-class ClosedPattern extends model.Expression {
+class ClosedPattern extends Expression {
   constructor (pattern) {
     super()
     this.pattern = pattern
@@ -53,35 +53,15 @@ class ClosedPattern extends model.Expression {
   }
 }
 
-// export const newSet = {
-//   doEval (tc) {
-//     return new TransactionalSet(tc, new Set())
-//   }
-// }
-
-export const unique = {
-  call (tc, [set]) {
-    set = set.doEval(tc).getNativeValue(tc)
-    if (!(set instanceof TransactionalSet)) {
-      // todo: error message
-      return false
-    }
-    return new UniquePattern(set)
+export const unique = function (value, set) {
+  if (!(set instanceof TransactionalSet)) {
+    // todo: error message
+    return false
   }
-}
-
-class UniquePattern extends model.Expression {
-  constructor (set) {
-    super()
-    this.set = set
+  if (set.has(value)) {
+    // todo: error message
+    return false
   }
-
-  doTest (tc, value) {
-    if (this.set.has(value)) {
-      // todo: error message
-      return false
-    }
-    this.set.add(value)
-    return true
-  }
+  set.add(value)
+  return true
 }
