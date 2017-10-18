@@ -29,11 +29,11 @@ JSONdecl {
 		| "export" "default" Expression #term -- default
 		| ~DeclarationKeyword Expression #term -- bare
 
-	ConstDeclaration = "const" DeclarationItem #term
+	ConstDeclaration = "const" DeclarationListItem #term
 
-	DeclarationList = NonemptyListOf<DeclarationItem, ",">
+	DeclarationList = NonemptyListOf<DeclarationListItem, ",">
 
-	DeclarationItem = identifier "=" Expression
+	DeclarationListItem = identifier "=" Expression
 
 	// expressions
 
@@ -50,7 +50,10 @@ JSONdecl {
 	Primary =
 		| Literal
 		| Grouping
-		| Chain
+		| SetConstructor
+		| Call
+		| Member
+		| Ref
 
 	Literal =
 		| Object
@@ -60,13 +63,15 @@ JSONdecl {
 		| regexp
 		| constant
 
-	Grouping = "(" Expression ")"	
+	Grouping = "(" Expression ")"
 
-	Chain = NonemptyListOf<(Call|Ref), ".">
+	SetConstructor = "set"
+
+	Call = Primary "(" ListOf<Expression, ","> ")"
+
+	Member = Primary "." identifier
 
 	Ref = identifier
-
-	Call = identifier "(" ListOf<Expression, ","> ")"
 
 	Object (an object) = "{" ListOf<Property, ","> "}"
 

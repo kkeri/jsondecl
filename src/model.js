@@ -1,4 +1,5 @@
 import { TestContext } from './context'
+import { TransactionalSet } from './set'
 
 export class Module {
   constructor (declList) {
@@ -13,7 +14,7 @@ export class Module {
       if (!this.defaultExport) {
         throw new Error('attempt to test against the default declaration but it is not declared')
       }
-      return this.defaultExport.doTest(tc, value)
+      return this.defaultExport.doEval(tc).doTest(tc, value)
     } else {
       if (!(id in this.exports)) {
         throw new Error(`attempt to test against '${id}' but it is not declared`)
@@ -44,36 +45,63 @@ export class Export {
 }
 
 export class Const {
-  constructor (id, body, exported) {
+  constructor (id, body) {
     this.id = id
     this.body = body
   }
 
-  test (value) {
+  test (value, args) {
     if (!this.env) {
       throw new Error(`a declaration in a parametric environment can't ` +
       `be tested independently`)
     }
     const tc = new TestContext(this.env)
-    return this.body.doTest(tc, value)
+    return this.doTest(tc, value, args)
+  }
+
+  doEval (tc) {
+    if (!('value' in this)) {
+      this.value = this.expr.doEval(tc)
+    }
+    return this.value
+  }
+
+  doTest (tc, value, args) {
+    return this.expr.doTest(tc, value, args)
   }
 }
 
 // expression
 
 export class Expression {
-  constructor () {
-    if (new.target === Expression) {
-      throw new Error(`can't instantiate abstract class`)
-    }
-  }
+  // constructor () {
+  //   if (new.target === Expression) {
+  //     throw new Error(`can't instantiate abstract class`)
+  //   }
+  // }
 
-  doEval (tc, value) {
-    throw new Error(`the expression should be used as pattern`)
+  doEval (tc) {
+    return this
   }
 
   doTest (tc, value) {
-    throw new Error(`the expression can't be used as pattern`)
+    tc.error(`the expression can't be used as pattern`)
+    return false
+  }
+
+  call (tc, args) {
+    tc.error(`the expression can't be called`)
+    return this
+  }
+
+  getChild (tc, id) {
+    tc.error(`property ${id} is not found`)
+    return this
+  }
+
+  getNativeValue (tc) {
+    tc.error(`the expression can't be passed to a native pattern`)
+    return null
   }
 }
 
@@ -84,14 +112,14 @@ export class LocalEnvironment extends Expression {
     this.body = body
   }
 
-  doTest (tc, value) {
+  doEval (tc) {
     let savedEnv = tc.env
     if (this.env) {
       tc.env = this.env
     } else {
       tc.env = Object.assign(Object.create(tc.env), this.staticEnv)
     }
-    let result = this.body.doTest(tc, value)
+    let result = this.body.doEval(tc)
     tc.env = savedEnv
     return result
   }
@@ -104,12 +132,18 @@ export class LogicalOr extends Expression {
   }
 
   doTest (tc, value) {
+    let result = false
     for (let item of this.items) {
-      if (item.doTest(tc, value)) {
-        return true
+      tc.begin()
+      if (item.doEval(tc).doTest(tc, value)) {
+        tc.commit()
+        result = true
+        // todo: continue iteration only if unique or closed is in effect
+      } else {
+        tc.rollback()
       }
     }
-    return false
+    return result
   }
 }
 
@@ -121,7 +155,7 @@ export class LogicalAnd extends Expression {
 
   doTest (tc, value) {
     for (let item of this.items) {
-      if (!item.doTest(tc, value)) {
+      if (!item.doEval(tc).doTest(tc, value)) {
         return false
       }
     }
@@ -136,29 +170,22 @@ export class LogicalNot extends Expression {
   }
 
   doTest (tc, value) {
-    return !this.expr.doTest(tc, value)
+    tc.begin()
+    var result = !this.expr.doEval(tc).doTest(tc, value)
+    tc.rollback()
+    return result
   }
 }
 
-export class Chain extends Expression {
-  constructor (items) {
+export class Member extends Expression {
+  constructor (expr, id) {
     super()
-    this.items = items
+    this.expr = expr
+    this.id = id
   }
 
-  doEval (value) {
-    for (let item of this.items) {
-      value = item.doEval(value)
-    }
-    return value
-  }
-
-  doTest (tc, value) {
-    let max = this.items.length - 1
-    for (let i = 0; i < max; i++) {
-      value = this.items[i].doEval(tc, value)
-    }
-    return this.items[max].validate(tc, value)
+  doEval (tc) {
+    return this.expr.doEval(tc).getChild(tc, this.id)
   }
 }
 
@@ -169,32 +196,20 @@ export class Reference extends Expression {
   }
 
   doEval (tc) {
-    let expr = tc.env[this.id]
-    return expr.doEval(tc)
-  }
-
-  doTest (tc, value) {
-    let expr = tc.env[this.id]
-    return expr.doTest(tc, value)
+    return tc.env[this.id].doEval(tc)
   }
 }
 
 export class Call extends Expression {
-  constructor (id, args = []) {
+  constructor (expr, args = []) {
     super()
-    this.id = id
+    this.expr = expr
     this.args = args
-    this.func = undefined
   }
 
   doEval (tc) {
-    let func = tc.env[this.id]
-    return func.doEval(tc, this.args)
-  }
-
-  doTest (tc, value) {
-    let func = tc.env[this.id]
-    return func.doTest(tc, value, this.args)
+    let func = this.expr.doEval(tc)
+    return func.call(tc, this.args)
   }
 }
 
@@ -205,20 +220,36 @@ export class Function_ extends Expression {
     this.body = body
   }
 
-  doEval (tc) {
-    return this
-  }
+  call (tc, args) {
 
-  doTest (tc, value, args) {
-    this.source.doEval(tc, value)
   }
 }
 
-export class Custom extends Expression {
-  constructor (doEval, doTest) {
+export class NativeMacro extends Expression {
+  constructor (opts) {
     super()
-    this.deEval = doEval
-    this.doTest = doTest
+    if (typeof opts.doEval === 'function') this.doEval = opts.doEval
+    if (typeof opts.doTest === 'function') this.doTest = opts.doTest
+    if (typeof opts.call === 'function') this.call = opts.call
+    if (typeof opts.getNativeValue === 'function') this.getNativeValue = opts.getNativeValue
+  }
+}
+
+export class NativePattern extends Expression {
+  constructor (fn) {
+    super()
+    this.fn = fn
+  }
+
+  call (tc, args) {
+    args = args.map(arg => arg.doEval(tc).getNativeValue(tc))
+    return new NativeMacro({
+      doTest: (tc, value) => this.fn(value, ...args)
+    })
+  }
+
+  doTest (tc, value) {
+    return this.fn(value)
   }
 }
 
@@ -282,18 +313,29 @@ export class Property extends Expression {
     //   return false
     // }
     let occurs = 0
-    for (let name in value) {
-      if (this.name.doTest(tc, name)) {
-        if (tc.matchSetDepth === tc.propertyDepth) {
-          tc.matchSet.add(name)
+    if (tc.tr.matchSet) {
+      for (let name in value) {
+        if (this.name.doEval(tc).doTest(tc, name)) {
+          tc.tr.matchSet[name] = true
+          let savedMatchSet = tc.tr.matchSet
+          tc.tr.matchSet = null
+          const match = this.value.doEval(tc).doTest(tc, value[name])
+          tc.tr.matchSet = savedMatchSet
+          if (match) {
+            occurs++
+          } else {
+            return false
+          }
         }
-        tc.propertyDepth++
-        const propMatch = this.value.doTest(tc, value[name])
-        tc.propertyDepth--
-        if (propMatch) {
-          occurs++
-        } else {
-          return false
+      }
+    } else {
+      for (let name in value) {
+        if (this.name.doEval(tc).doTest(tc, name)) {
+          if (this.value.doEval(tc).doTest(tc, value[name])) {
+            occurs++
+          } else {
+            return false
+          }
         }
       }
     }
@@ -317,7 +359,7 @@ export class Literal extends Expression {
     this.value = value
   }
 
-  doEval (tc) {
+  getNativeValue (tc) {
     return this.value
   }
 
@@ -331,6 +373,7 @@ export class RegExp_ extends Expression {
     super()
     this.body = body
     this.flags = flags
+    this.regexp = undefined
   }
 
   static fromRegExp (rgx) {
@@ -339,7 +382,7 @@ export class RegExp_ extends Expression {
     return obj
   }
 
-  doEval (tc) {
+  getNativeValue (tc) {
     return this.regexp
   }
 
@@ -351,5 +394,21 @@ export class RegExp_ extends Expression {
 export class This extends Expression {
   doEval (tc) {
     return tc.this
+  }
+}
+
+export class SetConstructor extends Expression {
+  getNativeValue (tc) {
+    if (!this.set) {
+      this.set = new TransactionalSet(tc, new Set())
+    }
+    return this.set
+  }
+
+  getChild (tc, id) {
+    switch (id) {
+      case 'size': return new Literal(this.getNativeValue(tc).size)
+      default: return super.getChild(tc, id)
+    }
   }
 }

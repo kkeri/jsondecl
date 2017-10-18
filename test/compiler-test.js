@@ -55,9 +55,7 @@ test('regex', t => {
 test('identifier', t => {
   t.match(compile('a'), null)
   t.match(compile('const a = 1; a'), {
-    defaultExport: {
-      // pattern: { value: 1 }
-    }
+    defaultExport: { id: 'a' }
   })
   t.done()
 })
@@ -113,9 +111,7 @@ test('const', t => {
       }
     },
     exports: {
-      a: {
-        value: 1
-      }
+      a: { value: 1 }
     },
     defaultExport: null
   })
@@ -250,6 +246,30 @@ test('object', t => {
 })
 
 test('valid function call', t => {
+  t.match(compile('eq()'), {
+    defaultExport: {
+      // func: { doEval: Function, doTest: Function },
+      args: [
+      ]
+    }
+  })
+  t.match(compile('eq(1)'), {
+    defaultExport: {
+      // func: { doEval: Function, doTest: Function },
+      args: [
+        { value: 1 }
+      ]
+    }
+  })
+  t.match(compile('eq(1, 2)'), {
+    defaultExport: {
+      // func: { doEval: Function, doTest: Function },
+      args: [
+        { value: 1 },
+        { value: 2 }
+      ]
+    }
+  })
   t.match(compile('closed({})'), {
     defaultExport: {
       // func: { doEval: Function, doTest: Function },

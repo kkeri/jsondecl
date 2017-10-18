@@ -51,7 +51,7 @@ class CompilerContext {
 
   lookup (id) {
     if (id in this.env) {
-      return this.env[id].body
+      return this.env[id]
     } else {
       this.error(`${id}: undeclared identifier`)
     }
@@ -65,10 +65,10 @@ class CompilerContext {
     }
   }
 
-  export (node) {
+  export (node, id) {
     this.exportCount++
-    if (node instanceof model.Const) {
-      this.module.exports[node.id] = node.body
+    if (id) {
+      this.module.exports[id] = node
     } else {
       if (this.module.defaultExport) {
         this.error(`duplicate default export`)
@@ -100,7 +100,7 @@ const builder = {
     }
     cc.leaveEnv()
     if (!cc.exportCount) {
-      cc.error(`module should export at least one declaration`)
+      cc.error(`a module should export something`)
     }
   },
 
@@ -136,7 +136,11 @@ const builder = {
   },
 
   Export (node, cc) {
-    cc.export(node.body)
+    if (node.body instanceof model.Const) {
+      cc.export(node.body.body, node.body.id)
+    } else {
+      cc.export(node.body)
+    }
     build(node.body, cc)
   },
 
@@ -164,11 +168,12 @@ const builder = {
     node.items.forEach(i => build(i, cc))
   },
 
-  Chain (node, cc) {
-    node.items.forEach(i => build(i, cc))
+  Member (node, cc) {
+    build(node.expr, cc)
   },
 
   Call (node, cc) {
+    build(node.expr, cc)
     node.args.forEach(i => build(i, cc))
   },
 
@@ -231,8 +236,8 @@ const resolver = {
     node.items.forEach(i => resolve(i, cc))
   },
 
-  Chain (node, cc) {
-    node.items.forEach(i => resolve(i, cc))
+  Member (node, cc) {
+    resolve(node.expr, cc)
   },
 
   Reference (node, cc) {
@@ -240,7 +245,7 @@ const resolver = {
   },
 
   Call (node, cc) {
-    cc.lookup(node.id)
+    resolve(node.expr, cc)
     node.args.forEach(i => resolve(i, cc))
   },
 
@@ -269,57 +274,32 @@ const resolver = {
 function importValue (value, originalId, localId, moduleSpec, error) {
   switch (typeof value) {
     case 'function':
-      return importFunction(value, originalId, localId, moduleSpec, error)
+      return new model.NativePattern(value)
     case 'object':
-      return importObject(value, originalId, localId, moduleSpec, error)
+      if (value instanceof RegExp) {
+        return model.RegExp_.fromRegExp(value)
+      } else if (Array.isArray(value)) {
+        error(`${originalId} imported from '${moduleSpec}': can't import an array`)
+      } else {
+        return new model.NativeMacro(value)
+      }
+      break
     case 'number':
     case 'string':
     case 'null':
     case 'boolean':
       return new model.Literal(value)
     default:
-      error(`${originalId} imported from '${moduleSpec}' has` +
+      error(`${originalId} imported from '${moduleSpec}' has ` +
         `illegal type '${typeof value}'`)
       return new model.Literal(value)
   }
 }
 
-function importFunction (func, originalId, localId, moduleSpec, error) {
-  return new model.Custom(null,
-    (tc, value, args) => args
-     ? func(value, ...args.map(i => i.doEval(tc)))
-     : func(value)
-  )
-}
-
-function importObject (object, originalId, localId, moduleSpec, error) {
-  if (object instanceof RegExp) {
-    return model.RegExp_.fromRegExp(object)
-  }
-  if (typeof object.doEval === 'function' &&
-    typeof object.doTest === 'function'
-  ) {
-    return object
-  }
-  let doEval
-  if (typeof object.doEval === 'function') {
-    doEval = object.doEval.bind(object)
-  } else {
-    doEval = () => { throw new Error(`'${localId}' should be used as pattern`) }
-  }
-  let doTest
-  if (typeof object.doTest === 'function') {
-    doTest = object.doTest.bind(object)
-  } else {
-    doTest = () => { throw new Error(`'${localId}' can't be used as pattern`) }
-  }
-  return new model.Custom(doEval, doTest)
-}
-
 function compileBuiltins (builtin) {
   let decls = {}
   for (let b in builtin) {
-    decls[b] = importValue(builtin[b], b, './builtin', _ => null)
+    decls[b] = importValue(builtin[b], b, b, './builtin', _ => null)
   }
   return decls
 }

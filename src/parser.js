@@ -78,7 +78,7 @@ const modelActions = {
   DeclarationList (list) {
     return list.asIteration().model()
   },
-  DeclarationItem (id, _eq_, expr) {
+  DeclarationListItem (id, _eq_, expr) {
     return new model.Const(id.model(), expr.model())
   },
 
@@ -113,19 +113,17 @@ const modelActions = {
   Grouping (_lp_, expr, _rp_) {
     return expr.model()
   },
-  Chain (list) {
-    let items = list.asIteration().model()
-    if (items.length === 1) {
-      return items[0]
-    } else {
-      return new model.Chain(items)
-    }
+  SetConstructor (_set_) {
+    return new model.SetConstructor()
+  },
+  Member (expr, _dot_, id) {
+    return new model.Member(expr.model(), id.model())
+  },
+  Call (expr, _lp_, args, _rp_) {
+    return new model.Call(expr.model(), args.asIteration().model())
   },
   Ref (id) {
     return new model.Reference(id.model())
-  },
-  Call (id, _lp_, args, _rp_) {
-    return new model.Call(id.model(), args.asIteration().model())
   },
   Object (_lb_, props, _rb_) {
     return new model.Object_(props.asIteration().model())
@@ -147,7 +145,7 @@ const modelActions = {
     return new model.Property(name.model(), value.model())
   },
   Property_deny (name, _dash_) {
-    return new model.Property(name.model(), new model.Call('any'), 0, 0)
+    return new model.Property(name.model(), new model.Reference('any'), 0, 0)
   },
   Cardinality (card) {
     let c = card.model()
