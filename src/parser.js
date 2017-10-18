@@ -125,11 +125,11 @@ const modelActions = {
   Ref (id) {
     return new model.Reference(id.model())
   },
-  Object (_lb_, props, _rb_) {
-    return new model.Object_(props.asIteration().model())
+  ObjectPattern (_lb_, props, _rb_) {
+    return new model.ObjectPattern(props.asIteration().model())
   },
-  Array (_lb_, items, _rb_) {
-    return new model.Array_(items.asIteration().model())
+  ArrayPattern (_lb_, items, _rb_) {
+    return new model.ArrayPattern(items.asIteration().model())
   },
   String (str) {
     return new model.Literal(str.model())
@@ -137,15 +137,15 @@ const modelActions = {
 
   // helpers
 
-  Property_cardinality (name, card, _colon_, value) {
+  PropertyPattern_cardinality (name, card, _colon_, value) {
     const c = card.model()
-    return new model.Property(name.model(), value.model(), c.low, c.high)
+    return new model.PropertyPattern(name.model(), value.model(), c.low, c.high)
   },
-  Property_default (name, _colon_, value) {
-    return new model.Property(name.model(), value.model())
+  PropertyPattern_default (name, _colon_, value) {
+    return new model.PropertyPattern(name.model(), value.model())
   },
-  Property_deny (name, _dash_) {
-    return new model.Property(name.model(), new model.Reference('any'), 0, 0)
+  PropertyPattern_deny (name, _dash_) {
+    return new model.PropertyPattern(name.model(), new model.Reference('any'), 0, 0)
   },
   Cardinality (card) {
     let c = card.model()

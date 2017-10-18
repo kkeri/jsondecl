@@ -177,11 +177,11 @@ const builder = {
     node.args.forEach(i => build(i, cc))
   },
 
-  Object_ (node, cc) {
+  ObjectPattern (node, cc) {
     node.propertyList.forEach(i => build(i, cc))
   },
 
-  Property (node, cc) {
+  PropertyPattern (node, cc) {
     build(node.name, cc)
     build(node.value, cc)
   },
@@ -249,15 +249,15 @@ const resolver = {
     node.args.forEach(i => resolve(i, cc))
   },
 
-  Object_ (node, cc) {
+  ObjectPattern (node, cc) {
     node.propertyList.forEach(i => resolve(i, cc))
   },
 
-  Array_ (node, cc) {
+  ArrayPattern (node, cc) {
     node.items.forEach(i => resolve(i, cc))
   },
 
-  Property (node, cc) {
+  PropertyPattern (node, cc) {
     resolve(node.name, cc)
     resolve(node.value, cc)
   }

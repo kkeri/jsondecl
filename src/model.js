@@ -253,7 +253,7 @@ export class NativePattern extends Expression {
   }
 }
 
-export class Object_ extends Expression {
+export class ObjectPattern extends Expression {
   constructor (propertyList) {
     super()
     this.propertyList = propertyList
@@ -270,7 +270,7 @@ export class Object_ extends Expression {
   }
 }
 
-export class Array_ extends Expression {
+export class ArrayPattern extends Expression {
   constructor (items) {
     super()
     this.items = items
@@ -298,7 +298,7 @@ export class Array_ extends Expression {
 
 // helpers
 
-export class Property extends Expression {
+export class PropertyPattern extends Expression {
   constructor (name, value, minCount = 1, maxCount = Infinity) {
     super()
     this.name = name
@@ -344,7 +344,7 @@ export class Property extends Expression {
   }
 }
 
-export class ListItem extends Expression {
+export class ListItemPattern extends Expression {
   constructor (value) {
     super()
     this.value = value

@@ -56,8 +56,8 @@ JSONdecl {
 		| Ref
 
 	Literal =
-		| Object
-		| Array
+		| ObjectPattern
+		| ArrayPattern
 		| number
 		| String
 		| regexp
@@ -73,15 +73,15 @@ JSONdecl {
 
 	Ref = identifier
 
-	Object (an object) = "{" ListOf<Property, ","> "}"
+	ObjectPattern (an object pattern) = "{" ListOf<PropertyPattern, ","> "}"
 
-	Array (an array) = "[" ListOf<ListItem, ","> "]"
+	ArrayPattern (an array pattern) = "[" ListOf<ListItemPattern, ","> "]"
 
 	String = string
 
 	// helpers
 
-	Property (a property) =
+	PropertyPattern (a property pattern) =
 		| Expression Cardinality ":" Expression -- cardinality
 		| Expression ":" Expression -- default
 		| Expression "-" -- deny
@@ -92,7 +92,7 @@ JSONdecl {
 		| "{" natural "}" -- single
 		| "{" natural ".." natural "}" -- range
 
-	ListItem (a list item) = Expression
+	ListItemPattern (a list item pattern) = Expression
 
 	DeclarationKeyword = "import" | "export" | "const"
 
