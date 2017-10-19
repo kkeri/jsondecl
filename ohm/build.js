@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const ohm = require('ohm-js');
 
-const parserPath = path.join(__dirname, 'parser.ohm');
+const parserPath = path.join(__dirname, 'jsondl.ohm');
 const recipePath = path.join(__dirname, 'recipe.js');
 
 console.log('Compiling grammar...')
