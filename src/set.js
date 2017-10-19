@@ -3,7 +3,7 @@ export class TransactionalSet {
   constructor (tc, set) {
     this.tc = tc
     this.set = set
-    this.tr = tc.tr
+    this.tr = null
     this.setStack = []
     this.trStack = []
   }
