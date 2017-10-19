@@ -22,6 +22,10 @@ export class TransactionalSet {
     return false
   }
 
+  size () {
+    return this.set.size
+  }
+
   begin (tr) {
     this.setStack.push(new Set())
     this.trStack.push(tr)

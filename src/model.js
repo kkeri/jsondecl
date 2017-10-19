@@ -407,7 +407,7 @@ export class SetConstructor extends Expression {
 
   getChild (tc, id) {
     switch (id) {
-      case 'size': return new Literal(this.getNativeValue(tc).size)
+      case 'size': return new Literal(this.getNativeValue(tc).size())
       default: return super.getChild(tc, id)
     }
   }
