@@ -1,1 +1,1 @@
-# JSONdecl - a JSON declaration language
+# JSONDL - a JSON declaration language

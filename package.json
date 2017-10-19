@@ -1,5 +1,5 @@
 {
-  "name": "jsondecl",
+  "name": "jsondl",
   "version": "0.0.1",
   "description": "JSON declaration language",
   "main": "lib/index.js",
@@ -19,10 +19,10 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/kkeri/jsondecl.git"
+    "url": "git+https://github.com/kkeri/jsondl.git"
   },
   "keywords": [
-    "jsondecl",
+    "jsondl",
     "json",
     "declaration",
     "constraint",
@@ -36,9 +36,9 @@
   },
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/kkeri/jsondecl/issues"
+    "url": "https://github.com/kkeri/jsondl/issues"
   },
-  "homepage": "https://github.com/kkeri/jsondecl#readme",
+  "homepage": "https://github.com/kkeri/jsondl#readme",
   "dependencies": {
     "ohm-js": "^0.13.1"
   },
