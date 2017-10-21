@@ -1,0 +1,6 @@
+import { a } from './test.js'
+
+{
+  "name": string,
+  "age": a
+}

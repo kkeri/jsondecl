@@ -2,6 +2,7 @@
 
 const test = require('tap').test
 const _compile = require('../lib/index').compile
+const _compileFileSync = require('../lib/index').compileFileSync
 const model = require('../lib/model')
 
 function compile(str) {
@@ -321,5 +322,25 @@ test('let...in', t => {
       body: { id: 'a' }
     }
   })
+  t.done()
+})
+
+test('compile file', t => {
+  t.match(_compileFileSync(__dirname + '/module/test.jsondl'), {
+    defaultExport: {
+      propertyList: [
+        { name: { value: "name" }},
+        { name: { value: "age" }}
+      ]
+    }
+  })
+  // t.match(_compileFileSync(__dirname + '/module/imports.jsondl'), {
+  //   defaultExport: {
+  //     propertyList: [
+  //       { name: { value: "name" }},
+  //       { name: { value: "age" }, value: { id: a }}
+  //     ]
+  //   }
+  // })
   t.done()
 })

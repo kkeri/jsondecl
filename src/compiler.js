@@ -17,7 +17,7 @@ export function compile (str, opts = {}) {
   if (!module_) return null
   const cc = new CompilerContext(module_, {
     error: opts.error || function () {},
-    importPath: dirname(opts.filename)
+    importPath: opts.importPath || (opts.filename && dirname(opts.filename)) || '.'
   })
   build(module_, cc)
   if (cc.errors) return null
