@@ -1,7 +1,7 @@
 {
   "name": "jsondl",
   "version": "0.0.1",
-  "description": "JSON declaration language",
+  "description": "A JSON declaration language",
   "main": "lib/index.js",
   "scripts": {
     "standard": "standard src/*.js",
@@ -27,8 +27,7 @@
     "declaration",
     "constraint",
     "schema",
-    "language",
-    "parser"
+    "language"
   ],
   "author": {
     "name": "Kalman Keri",
