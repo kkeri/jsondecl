@@ -1,3 +1,4 @@
+import { readFileSync } from 'fs'
 import { dirname, join } from 'path'
 import { parse } from './parser'
 import * as model from './model'
@@ -24,6 +25,13 @@ export function compile (str, opts = {}) {
   resolve(module_, cc)
   if (cc.errors) return null
   return module_
+}
+
+export function compileFile (fname, opts = {}) {
+  let src = readFileSync(fname, opts.encoding || 'utf8')
+  let copts = Object.create(opts)
+  copts.filename = fname
+  return compile(src, copts)
 }
 
 class CompilerContext {
