@@ -334,13 +334,13 @@ test('compile file', t => {
       ]
     }
   })
-  // t.match(_compileFileSync(__dirname + '/module/imports.jsondl'), {
-  //   defaultExport: {
-  //     propertyList: [
-  //       { name: { value: "name" }},
-  //       { name: { value: "age" }, value: { id: a }}
-  //     ]
-  //   }
-  // })
+  t.match(_compileFileSync(__dirname + '/module/imports.jsondl'), {
+    defaultExport: {
+      propertyList: [
+        { name: { value: "name" }},
+        { name: { value: "age" }, value: { id: "a" }}
+      ]
+    }
+  })
   t.done()
 })

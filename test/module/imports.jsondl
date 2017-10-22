@@ -1,4 +1,4 @@
-import { a } from './test.js'
+import { a } from "./test.js"
 
 {
   "name": string,
