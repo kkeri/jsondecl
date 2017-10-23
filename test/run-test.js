@@ -366,6 +366,10 @@ test('unique', t => {
   .test({ a: 1, b: 2 }), true)
   t.match(compile('const s = set; { "a": unique(s), "c": any } | { "b": unique(s) }')
   .test({ a: 1, b: 1 }), true)
+  t.match(compile('const s = set; { "a": unique(s) } | { "a": unique(s) }')
+  .test({ a: 1 }), true)
+  t.match(compile('const s = set; { "a": unique(s) } & { "a": unique(s) }')
+  .test({ a: 1 }), true)
 
   t.done()
 })
