@@ -6,12 +6,7 @@
 
 ## sets
 
-- set size expression
-- set declaration
-- set inclusion
-
-Requirements:
-- the same set can be used for uniqueness and inclusion testing
+- inclusion test
 
 Wish list:
 - the user may import and provide sets as runtime parameters
@@ -20,6 +15,8 @@ Wish list:
 
 ## compiler
 
+- how to pass errors to the user
+- handle error location
 - dynamic cardinality
 - static evaluation as compilation and optimization technique
 
@@ -30,7 +27,7 @@ Wish list:
 
 ## runtime
 
-- return false if there was an error during test
+- add exception handling to native patterns and macros
 - add error output to Module.test()
 
 ## native patterns
