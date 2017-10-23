@@ -1,5 +1,5 @@
 import { TestContext } from './context'
-import { TransactionalMap } from './set'
+import { TransactionalMap } from './map'
 
 export class Module {
   constructor (declList) {
