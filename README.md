@@ -19,7 +19,7 @@ JSONDL is natural and javascripty. It is simple like this.
 ~~~js
 var jsondl = require('jsondl')
 
-var personDecl = jsondl.compileFileSync('person.jsondl')
+var personDecl = jsondl.compileFile('person.jsondl')
 
 if (personDecl.test({ name: 'Dan', age: '25' })) {
     console.log('Wow!')
