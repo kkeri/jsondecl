@@ -8,12 +8,20 @@ export class TransactionalMap {
     this.trStack = []
   }
 
+  has (key) {
+    if (this.map.has(key)) return true
+    for (let i = this.mapStack.length - 1; i >= 0; i--) {
+      if (this.mapStack[i].has(key)) return true
+    }
+    return false
+  }
+
   get (key) {
     if (this.map.has(key)) return this.map.get(key)
     for (let i = this.mapStack.length - 1; i >= 0; i--) {
       if (this.mapStack[i].has(key)) return this.mapStack[i].get(key)
     }
-    return false
+    return undefined
   }
 
   set (key, value) {

@@ -1,4 +1,4 @@
-import { TransactionalMap } from './set'
+import { TransactionalMap } from './map'
 import { Expression } from './model'
 import { arrayToJsonPath } from './util'
 
@@ -67,4 +67,12 @@ export const unique = function (value, map) {
   }
   map.set(value, path)
   return true
+}
+
+export const inside = function (value, map) {
+  if (!(map instanceof TransactionalMap)) {
+    // todo: error message
+    return false
+  }
+  return map.has(value)
 }

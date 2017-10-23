@@ -357,8 +357,9 @@ test('let...in', t => {
   t.done()
 })
 
-test('unique', t => {
+test('uniqueness', t => {
   t.match(compile('const s = set; 1').test(1), true)
+  t.match(compile('const s = 1; { "a": unique(s) }').test({ a: 1 }), false)
   t.match(compile('const s = set; { "a": unique(s) }').test({ a: 1 }), true)
   t.match(compile('const s = set; { "a": unique(s), "b": unique(s) }')
   .test({ a: 1, b: 1 }), false)
@@ -370,6 +371,19 @@ test('unique', t => {
   .test({ a: 1 }), true)
   t.match(compile('const s = set; { "a": unique(s) } & { "a": unique(s) }')
   .test({ a: 1 }), true)
+
+  t.done()
+})
+
+test('set inclusion', t => {
+  t.match(compile('const s = set; inside(s)').test(1), false)
+  t.match(compile('const s = 1; inside(s)').test(1), false)
+  t.match(compile('const s = set; unique(s) & inside(s)').test(1), true)
+  t.match(compile('const s = set; inside(s) & unique(s)').test(1), false)
+  t.match(compile('const s = set; { "a": unique(s) } & { "b": inside(s) }')
+  .test({ a: 9, b: 9 }), true)
+  t.match(compile('const s = set; { "a": unique(s) } & { "b": inside(s) }')
+  .test({ a: 9, b: 7 }), false)
 
   t.done()
 })

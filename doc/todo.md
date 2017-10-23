@@ -1,12 +1,13 @@
 ## parser
 
 - unescape string literals
+- support all forms of ES6 import
 
 ## model
 
 ## sets
 
-- inclusion test
+- write those unit tests
 
 Wish list:
 - the user may import and provide sets as runtime parameters
