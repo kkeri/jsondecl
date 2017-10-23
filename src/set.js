@@ -1,46 +1,46 @@
 
-export class TransactionalSet {
-  constructor (tc, set) {
+export class TransactionalMap {
+  constructor (tc) {
     this.tc = tc
-    this.set = set
+    this.map = new Map()
     this.tr = null
-    this.setStack = []
+    this.mapStack = []
     this.trStack = []
   }
 
-  add (value) {
-    if (this.tr !== this.tc.tr) this.begin(this.tc.tr)
-    this.set.add(value)
-    return this
-  }
-
-  has (value) {
-    if (this.set.has(value)) return true
-    for (let i = this.setStack.length - 1; i >= 0; i--) {
-      if (this.setStack[i].has(value)) return true
+  get (key) {
+    if (this.map.has(key)) return this.map.get(key)
+    for (let i = this.mapStack.length - 1; i >= 0; i--) {
+      if (this.mapStack[i].has(key)) return this.mapStack[i].get(key)
     }
     return false
   }
 
+  set (key, value) {
+    if (this.tr !== this.tc.tr) this.begin(this.tc.tr)
+    this.map.set(key, value)
+    return this
+  }
+
   size () {
-    return this.set.size
+    return this.map.size
   }
 
   begin (tr) {
-    this.setStack.push(new Set())
+    this.mapStack.push(new Map())
     this.trStack.push(tr)
     tr.modifiedSets.push(this)
   }
 
   commit () {
-    let top = this.set
-    this.set = this.setStack.pop()
+    let top = this.map
+    this.map = this.mapStack.pop()
     this.tr = this.trStack.pop()
-    for (let value of top.values()) this.set.add(value)
+    top.forEach((k, v) => this.map.set(k, v))
   }
 
   rollback () {
-    this.set = this.setStack.pop()
+    this.map = this.mapStack.pop()
     this.tr = this.trStack.pop()
   }
 

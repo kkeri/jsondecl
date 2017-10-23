@@ -1,5 +1,5 @@
 import { TestContext } from './context'
-import { TransactionalSet } from './set'
+import { TransactionalMap } from './set'
 
 export class Module {
   constructor (declList) {
@@ -281,17 +281,22 @@ export class ArrayPattern extends Expression {
       return false
     }
     let vidx = 0
+    tc.pathStack.push(0)
     for (let item of this.items) {
-      let o = 0
-      while (o < item.maxCount &&
-        vidx < value.length && item.doTest(tc, value[vidx++])
+      let occurs = 0
+      while (occurs < item.maxCount &&
+        vidx < value.length && item.doTest(tc, value[vidx])
       ) {
-        o++
+        vidx++
+        occurs++
+        tc.pathStack[tc.pathStack.size - 1] = vidx
       }
-      if (o < item.minCount) {
+      if (occurs < item.minCount) {
+        tc.pathStack.pop()
         return false
       }
     }
+    tc.pathStack.pop()
     return true
   }
 }
@@ -315,6 +320,7 @@ export class PropertyPattern extends Expression {
     let occurs = 0
     if (tc.tr.matchSet) {
       for (let name in value) {
+        tc.pathStack.push(name)
         if (this.name.doEval(tc).doTest(tc, name)) {
           tc.tr.matchSet[name] = true
           let savedMatchSet = tc.tr.matchSet
@@ -324,19 +330,24 @@ export class PropertyPattern extends Expression {
           if (match) {
             occurs++
           } else {
+            tc.pathStack.pop()
             return false
           }
         }
+        tc.pathStack.pop()
       }
     } else {
       for (let name in value) {
+        tc.pathStack.push(name)
         if (this.name.doEval(tc).doTest(tc, name)) {
           if (this.value.doEval(tc).doTest(tc, value[name])) {
             occurs++
           } else {
+            tc.pathStack.pop()
             return false
           }
         }
+        tc.pathStack.pop()
       }
     }
     if (occurs < this.minCount || occurs > this.maxCount) return false
@@ -399,10 +410,10 @@ export class This extends Expression {
 
 export class SetConstructor extends Expression {
   getNativeValue (tc) {
-    if (!this.set) {
-      this.set = new TransactionalSet(tc, new Set())
+    if (!this.map) {
+      this.map = new TransactionalMap(tc)
     }
-    return this.set
+    return this.map
   }
 
   getChild (tc, id) {

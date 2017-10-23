@@ -1,6 +1,7 @@
 
 export class TestContext {
   constructor (env) {
+    this.pathStack = []
     this.env = env
     this.tr = {
       matchSet: null,

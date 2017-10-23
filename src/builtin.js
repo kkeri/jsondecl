@@ -1,5 +1,6 @@
-import { TransactionalSet } from './set'
+import { TransactionalMap } from './set'
 import { Expression } from './model'
+import { arrayToJsonPath } from './util'
 
 export const any = (x) => true
 
@@ -53,15 +54,17 @@ class ClosedPattern extends Expression {
   }
 }
 
-export const unique = function (value, set) {
-  if (!(set instanceof TransactionalSet)) {
+export const unique = function (value, map) {
+  const path = arrayToJsonPath(this.pathStack)
+  if (!(map instanceof TransactionalMap)) {
     // todo: error message
     return false
   }
-  if (set.has(value)) {
+  let prevPath = map.get(value)
+  if (prevPath && prevPath !== path) {
     // todo: error message
     return false
   }
-  set.add(value)
+  map.set(value, path)
   return true
 }
