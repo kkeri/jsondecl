@@ -75,7 +75,7 @@ JSONDL {
 
 	ObjectPattern (an object pattern) = "{" ListOf<PropertyPattern, ","> "}"
 
-	ArrayPattern (an array pattern) = "[" ListOf<ListItemPattern, ","> "]"
+	ArrayPattern (an array pattern) = "[" ListOf<ArrayItemPattern, ","> "]"
 
 	String = string
 
@@ -86,13 +86,15 @@ JSONDL {
 		| Expression ":" Expression -- default
 		| Expression "-" -- deny
 
+	ArrayItemPattern (an array item pattern) =
+		| Expression Cardinality -- cardinality
+		| Expression -- default
+
 	Cardinality = "?" | "*" | "+" | "-" | NumericCardinality
 
 	NumericCardinality =
 		| "{" natural "}" -- single
 		| "{" natural ".." natural "}" -- range
-
-	ListItemPattern (a list item pattern) = Expression
 
 	DeclarationKeyword = "import" | "export" | "const"
 

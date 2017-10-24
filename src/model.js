@@ -280,16 +280,16 @@ export class ArrayPattern extends Expression {
     if (!Array.isArray(value)) {
       return false
     }
-    let vidx = 0
+    let idx = 0
     tc.pathStack.push(0)
     for (let item of this.items) {
       let occurs = 0
       while (occurs < item.maxCount &&
-        vidx < value.length && item.doTest(tc, value[vidx])
+        idx < value.length && item.doEval(tc).doTest(tc, value[idx])
       ) {
-        vidx++
+        idx++
         occurs++
-        tc.pathStack[tc.pathStack.size - 1] = vidx
+        tc.pathStack[tc.pathStack.size - 1] = idx
       }
       if (occurs < item.minCount) {
         tc.pathStack.pop()
@@ -355,10 +355,16 @@ export class PropertyPattern extends Expression {
   }
 }
 
-export class ListItemPattern extends Expression {
-  constructor (value) {
+export class ArrayItemPattern extends Expression {
+  constructor (value, minCount = 1, maxCount = 1) {
     super()
     this.value = value
+    this.minCount = minCount
+    this.maxCount = maxCount
+  }
+
+  doTest (tc, value) {
+    return this.value.doEval(tc).doTest(tc, value)
   }
 }
 

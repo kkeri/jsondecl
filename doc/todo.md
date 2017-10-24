@@ -5,6 +5,11 @@
 
 ## model
 
+- repeated array patterns
+- closed arrays
+- array slice with cardinality (only one)
+- exclusive or combinator (oneOf)
+
 ## sets
 
 - write those unit tests

@@ -166,6 +166,13 @@ const modelActions = {
   NumericCardinality_range (_lbr_, low, _dotdot_, high, _rbr_) {
     return { low: low.model(), high: high.model() }
   },
+  ArrayItemPattern_cardinality (value, card) {
+    const c = card.model()
+    return new model.ArrayItemPattern(value.model(), c.low, c.high)
+  },
+  ArrayItemPattern_default (value) {
+    return new model.ArrayItemPattern(value.model())
+  },
 
   // lexical rules
 
