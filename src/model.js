@@ -263,9 +263,11 @@ export class ObjectPattern extends Expression {
     if (typeof value !== 'object' || value === null || Array.isArray(value)) {
       return false
     }
+    tc.pathStack.push('')
     for (let prop of this.propertyList) {
       if (!prop.doTest(tc, value)) return false
     }
+    tc.pathStack.pop()
     return true
   }
 }
@@ -323,7 +325,7 @@ export class PropertyPattern extends Expression {
     let occurs = 0
     if (tc.tr.matchSet) {
       for (let name in value) {
-        tc.pathStack.push(name)
+        tc.pathStack[tc.pathStack.length - 1] = name
         if (this.name.doEval(tc).doTest(tc, name)) {
           tc.tr.matchSet[name] = true
           let savedMatchSet = tc.tr.matchSet
@@ -333,24 +335,20 @@ export class PropertyPattern extends Expression {
           if (match) {
             occurs++
           } else {
-            tc.pathStack.pop()
             return false
           }
         }
-        tc.pathStack.pop()
       }
     } else {
       for (let name in value) {
-        tc.pathStack.push(name)
+        tc.pathStack[tc.pathStack.length - 1] = name
         if (this.name.doEval(tc).doTest(tc, name)) {
           if (this.value.doEval(tc).doTest(tc, value[name])) {
             occurs++
           } else {
-            tc.pathStack.pop()
             return false
           }
         }
-        tc.pathStack.pop()
       }
     }
     if (occurs < this.minCount || occurs > this.maxCount) return false
