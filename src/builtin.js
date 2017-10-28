@@ -41,16 +41,25 @@ class ClosedPattern extends Expression {
   }
 
   doTest (tc, value) {
-    const savedMatchSet = tc.tr.matchSet
-    const localMatchSet = {}
-    tc.tr.matchSet = localMatchSet
-    const match = this.pattern.doEval(tc).doTest(tc, value)
-    tc.tr.matchSet = savedMatchSet
-    if (!match) return false
-    for (let name in value) {
-      if (!(name in localMatchSet)) return false
+    if (Array.isArray(value)) {
+      let savedArrayIndex = tc.tr.arrayIdx
+      tc.tr.arrayIdx = 0
+      const match = this.pattern.doEval(tc).doTest(tc, value)
+      let matchCount = tc.tr.arrayIdx
+      tc.tr.arrayIdx = savedArrayIndex
+      return match && matchCount === value.length
+    } else {
+      const savedMatchSet = tc.tr.matchSet
+      const localMatchSet = {}
+      tc.tr.matchSet = localMatchSet
+      const match = this.pattern.doEval(tc).doTest(tc, value)
+      tc.tr.matchSet = savedMatchSet
+      if (!match) return false
+      for (let name in value) {
+        if (!(name in localMatchSet)) return false
+      }
+      return true
     }
-    return true
   }
 }
 

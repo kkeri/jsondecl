@@ -13,6 +13,7 @@ export class TestContext {
     this.tr = {
       prev: this.tr,
       matchSet: this.tr.matchSet ? {} : null,
+      arrayIdx: this.tr.arrayIdx,
       modifiedSets: []
     }
   }
@@ -26,6 +27,7 @@ export class TestContext {
       let prevMatchSet = this.tr.prev.matchSet
       for (let name in topMatchSet) prevMatchSet[name] = true
     }
+    this.tr.prev.arrayIdx = this.tr.arrayIdx
     this.tr = this.tr.prev
   }
 

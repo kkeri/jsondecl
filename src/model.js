@@ -280,24 +280,27 @@ export class ArrayPattern extends Expression {
     if (!Array.isArray(value)) {
       return false
     }
-    let idx = 0
+    let match = true
     tc.pathStack.push(0)
-    for (let item of this.items) {
-      let occurs = 0
-      while (occurs < item.maxCount &&
-        idx < value.length && item.doEval(tc).doTest(tc, value[idx])
-      ) {
-        idx++
-        occurs++
-        tc.pathStack[tc.pathStack.size - 1] = idx
+    if (tc.tr.arrayIdx === undefined) {
+      tc.tr.arrayIdx = 0
+      for (let item of this.items) {
+        if (!item.doEval(tc).doTest(tc, value)) {
+          match = false
+          break
+        }
       }
-      if (occurs < item.minCount) {
-        tc.pathStack.pop()
-        return false
+      tc.tr.arrayIdx = undefined
+    } else {
+      for (let item of this.items) {
+        if (!item.doEval(tc).doTest(tc, value)) {
+          match = false
+          break
+        }
       }
     }
     tc.pathStack.pop()
-    return true
+    return match
   }
 }
 
@@ -364,7 +367,17 @@ export class ArrayItemPattern extends Expression {
   }
 
   doTest (tc, value) {
-    return this.value.doEval(tc).doTest(tc, value)
+    let idx = tc.tr.arrayIdx
+    let occurs = 0
+    while (occurs < this.maxCount &&
+      idx < value.length && this.value.doEval(tc).doTest(tc, value[idx])
+    ) {
+      idx++
+      occurs++
+      tc.pathStack[tc.pathStack.size - 1] = idx
+    }
+    tc.tr.arrayIdx = idx
+    return occurs >= this.minCount
   }
 }
 

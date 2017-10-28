@@ -357,18 +357,69 @@ test('array', t => {
   t.match(compile('[string]').test([1]), false)
   t.match(compile('[string]').test(['a']), true)
   t.match(compile('[string]').test(['a', 1]), true)
-
-  t.match(compile('[number, string]').test([1]), false)
-  t.match(compile('[number, string]').test([1, 2, 'a']), false)
-  t.match(compile('[number, string]').test([1, 'a']), true)
-  t.match(compile('[number, string]').test([1, 'a', 'b']), true)
   
+  t.match(compile('[number?]').test([]), true)
+  t.match(compile('[number?]').test([1]), true)
+  t.match(compile('[number?]').test([1, 2]), true)
+  t.match(compile('[number?]').test(['a']), true)
+  t.match(compile('[number?]').test([1, 'a']), true)
+
   t.match(compile('[number*]').test([]), true)
   t.match(compile('[number*]').test([1]), true)
   t.match(compile('[number*]').test([1, 2]), true)
   t.match(compile('[number*]').test(['a']), true)
-  t.match(compile('[number*]').test(['a', 'b']), true)
+  t.match(compile('[number*]').test([1, 'a']), true)
 
+  t.match(compile('[number+]').test([]), false)
+  t.match(compile('[number+]').test([1]), true)
+  t.match(compile('[number+]').test([1, 2]), true)
+  t.match(compile('[number+]').test(['a']), false)
+  t.match(compile('[number+]').test([1, 'a']), true)
+
+  t.match(compile('[number{0}]').test([]), true)
+  t.match(compile('[number{0}]').test([1]), true)
+  t.match(compile('[number{0}]').test([1, 2]), true)
+  t.match(compile('[number{0}]').test(['a']), true)
+  t.match(compile('[number{0}]').test([1, 'a']), true)
+
+  t.match(compile('[number{2}]').test([]), false)
+  t.match(compile('[number{2}]').test([1]), false)
+  t.match(compile('[number{2}]').test([1, 2]), true)
+  t.match(compile('[number{2}]').test(['a']), false )
+  t.match(compile('[number{2}]').test([1, 'a']), false)
+
+  t.match(compile('[number, string]').test([1]), false)
+  t.match(compile('[number, string]').test(['a']), false)
+  t.match(compile('[number, string]').test([1, 2, 'a']), false)
+  t.match(compile('[number, string]').test([1, 'a']), true)
+  t.match(compile('[number, string]').test([1, 'a', 'b']), true)
+
+  t.done()
+})
+
+test('closed array', t => {
+  t.match(compile('closed([number])').test([1]), true)
+  t.match(compile('closed([number])').test([1, 2]), false)
+  t.match(compile('closed([number] | [string])').test([1]), true)
+  t.match(compile('closed([number] | [string])').test(['a']), true)
+  t.match(compile('closed([number] | [string])').test([1, 1]), false)
+  t.match(compile('closed([number] | [string])').test(['a', 1]), false)
+
+  t.match(compile('closed([[number]])').test([[1]]), true)
+  t.match(compile('closed([[number]])').test([[1, 2]]), true)
+  t.match(compile('closed([[number]])').test([[1], 2]), false)
+
+  t.done()
+})
+
+test('array combinations', t => {
+  t.match(compile('[number] | [string]').test([1]), true)
+  t.match(compile('[number] | [string]').test(['a']), true)
+  t.match(compile('[number, number] | [number, string]').test([1, 1]), true)
+  t.match(compile('[number, number] | [number, string]').test([1, 'a']), true)
+  
+  t.match(compile('[number, any] & [any, string]').test([1, 'a']), true)
+  
   t.done()
 })
 
