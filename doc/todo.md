@@ -75,3 +75,7 @@ Wish list:
   - matching repeated array patterns (why closed is important)
 
 - extendibility
+
+- examples
+  - graph declaration (nodes and edges)
+  - package.json
