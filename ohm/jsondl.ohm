@@ -75,7 +75,9 @@ JSONDL {
 
 	ObjectPattern (an object pattern) = "{" ListOf<PropertyPattern, ","> "}"
 
-	ArrayPattern (an array pattern) = "[" ListOf<ArrayItemPattern, ","> "]"
+	ArrayPattern (an array pattern) =
+		| "[" ListOf<ArrayItemPattern, ","> "]" Cardinality -- cardinality
+		| "[" ListOf<ArrayItemPattern, ","> "]" -- default
 
 	String = string
 

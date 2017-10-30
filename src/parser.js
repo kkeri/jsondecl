@@ -128,7 +128,11 @@ const modelActions = {
   ObjectPattern (_lb_, props, _rb_) {
     return new model.ObjectPattern(props.asIteration().model())
   },
-  ArrayPattern (_lb_, items, _rb_) {
+  ArrayPattern_cardinality (_lb_, items, _rb_, card) {
+    const c = card.model()
+    return new model.ArrayPattern(items.asIteration().model(), c.low, c.high)
+  },
+  ArrayPattern_default (_lb_, items, _rb_) {
     return new model.ArrayPattern(items.asIteration().model())
   },
   String (str) {

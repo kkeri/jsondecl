@@ -1,11 +1,12 @@
 ## parser
 
+- {1..2} -> {1,2}
+- introduce {n,} to denote at least n occurences
 - unescape string literals
 - support all forms of ES6 import
 
 ## model
 
-- repeated array patterns
 - exclusive or combinator (oneOf)
 
 ## sets
@@ -19,6 +20,7 @@ Wish list:
 
 ## compiler
 
+- warning: cardinality defined on empty array pattern
 - how to pass errors to the user
 - handle error location
 - dynamic cardinality
@@ -36,6 +38,7 @@ Wish list:
 
 ## native patterns
 
+- inside -> member or element
 - add warn()
 
 ## to be decided
@@ -69,5 +72,6 @@ Wish list:
 
 - pattern matching
   - order of evaluation
+  - matching repeated array patterns (why closed is important)
 
 - extendibility

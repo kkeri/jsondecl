@@ -273,9 +273,11 @@ export class ObjectPattern extends Expression {
 }
 
 export class ArrayPattern extends Expression {
-  constructor (items) {
+  constructor (items, minCount = 1, maxCount = 1) {
     super()
     this.items = items
+    this.minCount = minCount
+    this.maxCount = maxCount
   }
 
   doTest (tc, value) {
@@ -284,18 +286,35 @@ export class ArrayPattern extends Expression {
     }
     let prevArrayMatchLimit = tc.tr.arrayMatchLimit
     let idx = 0
+    let rep = 0
     tc.pathStack.push(0)
+    while (rep < this.maxCount) {
+      let baseIdx = idx
+      let match
+      [match, idx] = this.testItemsAtIndex(tc, value, idx)
+      if (!match) break
+      rep++
+      if (idx === baseIdx) break
+    }
+    tc.pathStack.pop()
+    if (rep < this.minCount) {
+      return false
+    }
+    tc.tr.arrayMatchLimit = Math.max(prevArrayMatchLimit, idx)
+    return true
+  }
+
+  testItemsAtIndex (tc, value, idx) {
+    let baseIdx = idx
     for (let item of this.items) {
       let match
       [match, idx] = item.testAtIndex(tc, value, idx)
       if (!match) {
         tc.pathStack.pop()
-        return false
+        return [false, baseIdx]
       }
     }
-    tc.pathStack.pop()
-    tc.tr.arrayMatchLimit = Math.max(prevArrayMatchLimit, idx)
-    return true
+    return [true, idx]
   }
 }
 
