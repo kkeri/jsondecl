@@ -13,7 +13,7 @@ export class TestContext {
     this.tr = {
       prev: this.tr,
       matchSet: this.tr.matchSet ? {} : null,
-      arrayIdx: this.tr.arrayIdx,
+      arrayMatchLimit: this.tr.arrayMatchLimit,
       modifiedSets: []
     }
   }
@@ -27,7 +27,8 @@ export class TestContext {
       let prevMatchSet = this.tr.prev.matchSet
       for (let name in topMatchSet) prevMatchSet[name] = true
     }
-    this.tr.prev.arrayIdx = this.tr.arrayIdx
+    this.tr.prev.arrayMatchLimit =
+      Math.max(this.tr.prev.arrayMatchLimit, this.tr.arrayMatchLimit)
     this.tr = this.tr.prev
   }
 

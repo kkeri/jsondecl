@@ -400,14 +400,34 @@ test('array', t => {
 test('closed array', t => {
   t.match(compile('closed([number])').test([1]), true)
   t.match(compile('closed([number])').test([1, 2]), false)
+  t.match(compile('closed([number, string])').test([1, 2]), false)
+  t.match(compile('closed([number, string])').test([1, 'a']), true)
+  t.match(compile('closed([number, string])').test([1, 'a', 'b']), false)
+
   t.match(compile('closed([number] | [string])').test([1]), true)
   t.match(compile('closed([number] | [string])').test(['a']), true)
   t.match(compile('closed([number] | [string])').test([1, 1]), false)
   t.match(compile('closed([number] | [string])').test(['a', 1]), false)
-
+  
+  t.match(compile('closed([string] | [string, number])').test(['a', 1]), true)
+  t.match(compile('closed([string, number] | [string])').test(['a', 1]), true)
+  t.match(compile('closed([string] & [string, number])').test(['a', 1]), true)
+  t.match(compile('closed([string, number] & [string])').test(['a', 1]), true)
+  
+  t.match(compile('closed([string] | [string, number])').test(['a', 1, 2]), false)
+  t.match(compile('closed([string, number] | [string])').test(['a', 1, 2]), false)
+  t.match(compile('closed([string] & [string, number])').test(['a', 1, 2]), false)
+  t.match(compile('closed([string, number] & [string])').test(['a', 1, 2]), false)
+  
+  t.match(compile('closed([number, any] & [any, string])').test([1, 'a']), true)
+  t.match(compile('closed([number, any] & [any, string])').test([1, 'a', 2]), false)
+  
   t.match(compile('closed([[number]])').test([[1]]), true)
   t.match(compile('closed([[number]])').test([[1, 2]]), true)
   t.match(compile('closed([[number]])').test([[1], 2]), false)
+
+  t.match(compile('closed(closed([number, string]))').test([1, 'a']), true)
+  t.match(compile('closed(closed([number, string]))').test([1, 'a', 'b']), false)
 
   t.done()
 })

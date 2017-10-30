@@ -6,8 +6,6 @@
 ## model
 
 - repeated array patterns
-- closed arrays
-- array slice with cardinality (only one)
 - exclusive or combinator (oneOf)
 
 ## sets
@@ -47,6 +45,29 @@ Wish list:
 
 ## perspectives
 
+- array sections [ ] :: [ ]
 - default value for absent properties
 - arithmetic expressions and constraints
 - compilation to javascript
+
+## docs
+
+- API
+
+- module structure
+  - import
+  - declaration types
+  - values and patterns
+
+
+- patterns
+  - types
+  - combinators
+  - functions and macros
+  - uniqueness
+  - closedness
+
+- pattern matching
+  - order of evaluation
+
+- extendibility
