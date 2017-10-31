@@ -167,6 +167,9 @@ const modelActions = {
   NumericCardinality_single (_lbr_, int, _rbr_) {
     return { low: int.model(), high: int.model() }
   },
+  NumericCardinality_min (_lbr_, low, _comma_, _rbr_) {
+    return { low: low.model(), high: Infinity }
+  },
   NumericCardinality_range (_lbr_, low, _dotdot_, high, _rbr_) {
     return { low: low.model(), high: high.model() }
   },

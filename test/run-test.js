@@ -211,6 +211,15 @@ test('numeric cardinality', t => {
   t.match(compile('{ /a/{1}: number }').test({ ab: 1, ac: 1 }), false)
   t.match(compile('{ /a/{1}: number }').test({ a: 1, b: 1 }), true)
 
+  t.match(compile('{ /a/{1,}: number }').test({}), false)
+  t.match(compile('{ /a/{1,}: number }').test({ b: 1 }), false)
+  t.match(compile('{ /a/{1,}: number }').test({ a: 'x' }), false)
+  t.match(compile('{ /a/{1,}: number }').test({ a: 1 }), true)
+  t.match(compile('{ /a/{1,}: number }').test({ ab: 1, ac: 1 }), true)
+  t.match(compile('{ /a/{1,}: number }').test({ ab: 1, ac: 1, ad: 1 }), true)
+  t.match(compile('{ /a/{1,}: number }').test({ a: 1, b: 1 }), true)
+  t.match(compile('{ /a/{1,}: number }').test({ ab: 1, ac: 'x' }), false)
+
   t.match(compile('{ /a/{1,2}: number }').test({}), false)
   t.match(compile('{ /a/{1,2}: number }').test({ b: 1 }), false)
   t.match(compile('{ /a/{1,2}: number }').test({ a: 'x' }), false)

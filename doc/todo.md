@@ -1,8 +1,7 @@
 ## parser
 
-- {1..2} -> {1,2}
-- introduce {n,} to denote at least n occurences
 - unescape string literals
+- functions
 - support all forms of ES6 import
 
 ## model
