@@ -87,20 +87,20 @@ const modelActions = {
   LetIn (_let_, decls, _in_, body) {
     return new model.LocalEnvironment(decls.asIteration().model(), body.model())
   },
-  LogicalOr (list) {
+  OrPattern (list) {
     let items = list.asIteration().model()
     if (items.length === 1) {
       return items[0]
     } else {
-      return new model.LogicalOr(items)
+      return new model.OrPattern(items)
     }
   },
-  LogicalAnd (list) {
+  AndPattern (list) {
     let items = list.asIteration().model()
     if (items.length === 1) {
       return items[0]
     } else {
-      return new model.LogicalAnd(items)
+      return new model.AndPattern(items)
     }
   },
   LogicalNot (list, expr) {

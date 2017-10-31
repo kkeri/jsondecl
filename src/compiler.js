@@ -168,11 +168,11 @@ const builder = {
     cc.leaveEnv()
   },
 
-  LogicalOr (node, cc) {
+  OrPattern (node, cc) {
     node.items.forEach(i => build(i, cc))
   },
 
-  LogicalAnd (node, cc) {
+  AndPattern (node, cc) {
     node.items.forEach(i => build(i, cc))
   },
 
@@ -236,11 +236,11 @@ const resolver = {
     cc.leaveEnv()
   },
 
-  LogicalOr (node, cc) {
+  OrPattern (node, cc) {
     node.items.forEach(i => resolve(i, cc))
   },
 
-  LogicalAnd (node, cc) {
+  AndPattern (node, cc) {
     node.items.forEach(i => resolve(i, cc))
   },
 

@@ -125,7 +125,7 @@ export class LocalEnvironment extends Expression {
   }
 }
 
-export class LogicalOr extends Expression {
+export class OrPattern extends Expression {
   constructor (items) {
     super()
     this.items = items
@@ -147,7 +147,7 @@ export class LogicalOr extends Expression {
   }
 }
 
-export class LogicalAnd extends Expression {
+export class AndPattern extends Expression {
   constructor (items) {
     super()
     this.items = items

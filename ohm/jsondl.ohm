@@ -37,13 +37,13 @@ JSONDL {
 
 	// expressions
 
-	Expression = LetIn | LogicalOr
+	Expression = LetIn | OrPattern
 
 	LetIn = "let" DeclarationList "in" Expression
 
-	LogicalOr = NonemptyListOf<LogicalAnd, "|">
+	OrPattern = NonemptyListOf<AndPattern, "|">
 
-	LogicalAnd = NonemptyListOf<LogicalNot, "&">
+	AndPattern = NonemptyListOf<LogicalNot, "&">
 
 	LogicalNot = "!"* Primary
 
