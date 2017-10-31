@@ -1,6 +1,6 @@
 
 export class TestContext {
-  constructor (env) {
+  constructor (env = {}) {
     this.pathStack = []
     this.env = env
     this.tr = {
