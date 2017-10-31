@@ -30,13 +30,14 @@ export class TransactionalMap {
     return this
   }
 
-  size () {
-    return this.map.size
-  }
+  // size () {
+  //   return this.map.size
+  // }
 
   begin (tr) {
-    this.mapStack.push(new Map())
+    this.mapStack.push(this.map)
     this.trStack.push(tr)
+    this.map = new Map()
     tr.modifiedSets.push(this)
   }
 
@@ -44,7 +45,7 @@ export class TransactionalMap {
     let top = this.map
     this.map = this.mapStack.pop()
     this.tr = this.trStack.pop()
-    top.forEach((k, v) => this.map.set(k, v))
+    top.forEach((v, k) => this.map.set(k, v))
   }
 
   rollback () {
