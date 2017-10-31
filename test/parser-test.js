@@ -258,7 +258,7 @@ test('valid cardinality', t => {
   t.notEqual(parse('{ "a"-, b- }'), null)
   t.notEqual(parse('{ "a"{1}: "b" }'), null)
   t.notEqual(parse('{ "a"{33}: "b" }'), null)
-  t.notEqual(parse('{ "a"{1..3}: "b" }'), null)
+  t.notEqual(parse('{ "a"{1,3}: "b" }'), null)
   t.done()
 })
 

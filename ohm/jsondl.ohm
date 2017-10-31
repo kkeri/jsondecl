@@ -96,7 +96,7 @@ JSONDL {
 
 	NumericCardinality =
 		| "{" natural "}" -- single
-		| "{" natural ".." natural "}" -- range
+		| "{" natural "," natural "}" -- range
 
 	DeclarationKeyword = "import" | "export" | "const"
 

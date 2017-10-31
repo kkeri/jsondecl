@@ -211,14 +211,14 @@ test('numeric cardinality', t => {
   t.match(compile('{ /a/{1}: number }').test({ ab: 1, ac: 1 }), false)
   t.match(compile('{ /a/{1}: number }').test({ a: 1, b: 1 }), true)
 
-  t.match(compile('{ /a/{1..2}: number }').test({}), false)
-  t.match(compile('{ /a/{1..2}: number }').test({ b: 1 }), false)
-  t.match(compile('{ /a/{1..2}: number }').test({ a: 'x' }), false)
-  t.match(compile('{ /a/{1..2}: number }').test({ a: 1 }), true)
-  t.match(compile('{ /a/{1..2}: number }').test({ ab: 1, ac: 1 }), true)
-  t.match(compile('{ /a/{1..2}: number }').test({ ab: 1, ac: 1, ad: 1 }), false)
-  t.match(compile('{ /a/{1..2}: number }').test({ a: 1, b: 1 }), true)
-  t.match(compile('{ /a/{1..2}: number }').test({ ab: 1, ac: 'x' }), false)
+  t.match(compile('{ /a/{1,2}: number }').test({}), false)
+  t.match(compile('{ /a/{1,2}: number }').test({ b: 1 }), false)
+  t.match(compile('{ /a/{1,2}: number }').test({ a: 'x' }), false)
+  t.match(compile('{ /a/{1,2}: number }').test({ a: 1 }), true)
+  t.match(compile('{ /a/{1,2}: number }').test({ ab: 1, ac: 1 }), true)
+  t.match(compile('{ /a/{1,2}: number }').test({ ab: 1, ac: 1, ad: 1 }), false)
+  t.match(compile('{ /a/{1,2}: number }').test({ a: 1, b: 1 }), true)
+  t.match(compile('{ /a/{1,2}: number }').test({ ab: 1, ac: 'x' }), false)
 
   t.done()
 })
@@ -439,12 +439,12 @@ test('array repetition', t => {
   t.match(compile('[]?').test([]), true)
   t.match(compile('[]*').test([]), true)
   t.match(compile('[]+').test([]), true)
-  t.match(compile('[]{0..2}').test([]), true)
+  t.match(compile('[]{0,2}').test([]), true)
 
   t.match(compile('[]?').test([1]), true)
   t.match(compile('[]*').test([1]), true)
   t.match(compile('[]+').test([1]), true)
-  t.match(compile('[]{0..2}').test([1]), true)
+  t.match(compile('[]{0,2}').test([1]), true)
 
   t.match(compile('[number]?').test([]), true)
   t.match(compile('[number]?').test([1]), true)
@@ -458,10 +458,10 @@ test('array repetition', t => {
   t.match(compile('[number]+').test([1]), true)
   t.match(compile('[number]+').test([1, 2]), true)
 
-  t.match(compile('[number]{0..2}').test([]), true)
-  t.match(compile('[number]{0..2}').test([1]), true)
-  t.match(compile('[number]{0..2}').test([1, 2]), true)
-  t.match(compile('[number]{0..2}').test([1, 2, 3]), true)
+  t.match(compile('[number]{0,2}').test([]), true)
+  t.match(compile('[number]{0,2}').test([1]), true)
+  t.match(compile('[number]{0,2}').test([1, 2]), true)
+  t.match(compile('[number]{0,2}').test([1, 2, 3]), true)
 
   t.match(compile('[number, string]*').test([]), true)
   t.match(compile('[number, string]*').test([1]), true)
@@ -480,7 +480,7 @@ test('array repetition', t => {
 
 test('closed array repetitions', t => {
   t.match(compile('closed([number]?)').test([1, 2]), false)
-  t.match(compile('closed([number]{0..2})').test([1, 2, 3]), false)
+  t.match(compile('closed([number]{0,2})').test([1, 2, 3]), false)
   
   t.match(compile('closed([number, string]*)').test([]), true)
   t.match(compile('closed([number, string]*)').test([1]), false)
