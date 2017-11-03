@@ -11,6 +11,7 @@
 ## sets
 
 - write those unit tests
+- set lifetime should be the same as transaction lifetime
 
 Wish list:
 - the user may import and provide sets as runtime parameters
@@ -19,6 +20,7 @@ Wish list:
 
 ## compiler
 
+- mutual dependency between modules
 - warning: cardinality defined on empty array pattern
 - how to pass errors to the user
 - handle error location
@@ -32,6 +34,7 @@ Wish list:
 
 ## runtime
 
+- detect mutual dependency
 - add exception handling to native patterns and macros
 - add error output to Module.test()
 
