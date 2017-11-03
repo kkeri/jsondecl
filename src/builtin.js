@@ -24,7 +24,7 @@ export const gt = (x, y) => number(x) && number(y) && x > y
 
 export const ge = (x, y) => number(x) && number(y) && x >= y
 
-export const closed = {
+class ClosedFunction extends Expression {
   call (tc, [pattern]) {
     if (!pattern) {
       tc.error(`closed requires a pattern argument`)
@@ -63,7 +63,9 @@ class ClosedPattern extends Expression {
   }
 }
 
-export const unique = function (value, map) {
+export const closed = new ClosedFunction()
+
+export function unique (value, map) {
   const path = arrayToJsonPath(this.pathStack)
   if (!(map instanceof TransactionalMap)) {
     // todo: error message
@@ -78,7 +80,7 @@ export const unique = function (value, map) {
   return true
 }
 
-export const inside = function (value, map) {
+export function inside (value, map) {
   if (!(map instanceof TransactionalMap)) {
     // todo: error message
     return false

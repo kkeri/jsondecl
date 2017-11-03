@@ -61,7 +61,13 @@ export class Const {
 
   doEval (tc) {
     if (!('value' in this)) {
-      this.value = this.expr.doEval(tc)
+      if (this.busy) {
+        tc.error(`circular reference detected while evaluating const '${this.id}'`)
+        return undefined
+      }
+      this.busy = true
+      this.value = this.body.doEval(tc)
+      this.busy = false
     }
     return this.value
   }
@@ -225,16 +231,6 @@ export class Function_ extends Expression {
   }
 }
 
-export class NativeMacro extends Expression {
-  constructor (opts) {
-    super()
-    if (typeof opts.doEval === 'function') this.doEval = opts.doEval
-    if (typeof opts.doTest === 'function') this.doTest = opts.doTest
-    if (typeof opts.call === 'function') this.call = opts.call
-    if (typeof opts.getNativeValue === 'function') this.getNativeValue = opts.getNativeValue
-  }
-}
-
 export class NativePattern extends Expression {
   constructor (fn) {
     super()
@@ -242,10 +238,13 @@ export class NativePattern extends Expression {
   }
 
   call (tc, args) {
+    let fn = this.fn
     args = args.map(arg => arg.doEval(tc).getNativeValue(tc))
-    return new NativeMacro({
-      doTest: (tc, value) => this.fn.call(tc, value, ...args)
-    })
+    return new (class extends Expression {
+      doTest (tc, value) {
+        return fn.call(tc, value, ...args)
+      }
+    })()
   }
 
   doTest (tc, value) {

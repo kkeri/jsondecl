@@ -145,7 +145,7 @@ const builder = {
 
   Export (node, cc) {
     if (node.body instanceof model.Const) {
-      cc.export(node.body.body, node.body.id)
+      cc.export(node.body, node.body.id)
     } else {
       cc.export(node.body)
     }
@@ -154,7 +154,7 @@ const builder = {
 
   Const (node, cc) {
     if (cc.dynamicDepth === 0) node.env = cc.env
-    cc.bind(node.id, node.body)
+    cc.bind(node.id, node)
     build(node.body, cc)
   },
 
@@ -289,7 +289,7 @@ function importValue (value, originalId, localId, moduleSpec, error) {
       } else if (Array.isArray(value)) {
         error(`${originalId} imported from '${moduleSpec}': can't import an array`)
       } else {
-        return new model.NativeMacro(value)
+        return value
       }
       break
     case 'number':

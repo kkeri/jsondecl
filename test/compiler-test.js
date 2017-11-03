@@ -107,42 +107,42 @@ test('import rename', t => {
 test('const', t => {
   t.match(compile('export const a = 1'), {
     env: {
-      a: {
-        value: 1
-      }
+      a: { body: { value: 1 } }
     },
     exports: {
-      a: { value: 1 }
+      a: { body: { value: 1 } }
     },
     defaultExport: null
   })
   t.match(compile('export const a = 1; 2'), {
     env: {  
-      a: { value: 1 }
+      a: { body: { value: 1 } }
     },
     exports: {
-      a: { value: 1 }
+      a: { body: { value: 1 } }
     },
     defaultExport: { value: 2 }
   })
   t.match(compile('const a = 1; const a = 2'), null)
   t.match(compile('export const a = 1; const b = 2'), {
     env: {
-      a: { value: 1 },
-      b: { value: 2 }
+      a: { body: { value: 1 } },
+      b: { body: { value: 2 } }
     },
     exports: {
-      a: { value: 1 }
+      a: { body: { value: 1 } }
     },
     defaultExport: null
   })
   t.match(compile('export const a = 1 | 2'), {
     env: {
-      a: {
-        items: [
-          { value: 1 },
-          { value: 2 }
-        ]
+      a: { body: 
+        {
+          items: [
+            { value: 1 },
+            { value: 2 }
+          ]
+        }
       }
     }
   })
@@ -152,17 +152,17 @@ test('const', t => {
 test('const with comments', t => {
   t.match(compile('/**/export/**/const/**/a/**/=/**/1/**/'), {
     exports: {
-      a: { value: 1 }
+      a: { body: { value: 1 } }
     },
   })
   t.match(compile('//\rexport//\rconst//\ra//\r=//\r1//\r'), {
     exports: {
-      a: { value: 1 }
+      a: { body: { value: 1 } }
     },
   })
   t.match(compile('export const a = 1;/**/\t //'), {
     exports: {
-      a: { value: 1 }
+      a: { body: { value: 1 } }
     },
   })
   t.done()
@@ -171,37 +171,37 @@ test('const with comments', t => {
 test('const with terminator', t => {
   t.match(compile('export const a = 1;/**/'), {
     exports: {
-      a: { value: 1 }
+      a: { body: { value: 1 } }
     },
   })
   t.match(compile('export const a = 1;//'), {
     exports: {
-      a: { value: 1 }
+      a: { body: { value: 1 } }
     },
   })
   t.match(compile('export const a = 1/**/;'), {
     exports: {
-      a: { value: 1 }
+      a: { body: { value: 1 } }
     },
   })
   t.match(compile('export const a = 1/**/\r;'), {
     exports: {
-      a: { value: 1 }
+      a: { body: { value: 1 } }
     },
   })
   t.match(compile('export const a = 1//\r;'), {
     exports: {
-      a: { value: 1 }
+      a: { body: { value: 1 } }
     },
   })
   t.match(compile('export const a = 1\r;'), {
     exports: {
-      a: { value: 1 }
+      a: { body: { value: 1 } }
     },
   })
   t.match(compile('export const a = 1\r \n '), {
     exports: {
-      a: { value: 1 }
+      a: { body: { value: 1 } }
     },
   })
   t.done()
@@ -287,7 +287,7 @@ test('valid function call', t => {
       args: [
         {
           propertyList: [
-            { name: { value: "a" }, value: { value: 1 }}
+            { name: { value: "a" }, value: { value: 1 } }
           ]
         }
       ]
@@ -301,7 +301,7 @@ test('let...in', t => {
   t.match(compile('let a = 1 in a'), {
     defaultExport: {
       env: {
-        a: { value: 1 }
+        a: { body: { value: 1 } }
       },
       body: { id: 'a' }
     }
@@ -309,7 +309,7 @@ test('let...in', t => {
   t.match(compile('const x = 1; let a = x in a'), {
     defaultExport: {
       env: {
-        a: { id: 'x' }
+        a: { body: { id: 'x' } }
       },
       body: { id: 'a' }
     }
@@ -317,7 +317,7 @@ test('let...in', t => {
   t.match(compile('export default let a = x in a; const x = 1'), {
     defaultExport: {
       env: {
-        a: { id: 'x' }
+        a: { body: { id: 'x' } }
       },
       body: { id: 'a' }
     }
