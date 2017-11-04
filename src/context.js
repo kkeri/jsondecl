@@ -1,8 +1,12 @@
 
 export class TestContext {
-  constructor (env = {}) {
+  constructor ({
+    env = {},
+    error = function (msg, node) {}
+  } = {}) {
     this.pathStack = []
     this.env = env
+    this.error = error
     this.tr = {
       matchSet: null,
       modifiedSets: []
@@ -37,9 +41,5 @@ export class TestContext {
       set.rollback()
     }
     this.tr = this.tr.prev
-  }
-
-  error (msg) {
-    console.log(msg)
   }
 }

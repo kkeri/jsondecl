@@ -9,7 +9,9 @@ export class Module {
   }
 
   test (value, id = '') {
-    const tc = new TestContext(this.env)
+    const tc = new TestContext({
+      env: this.env
+    })
     if (id === '') {
       if (!this.defaultExport) {
         throw new Error('attempt to test against the default declaration but it is not declared')
@@ -55,7 +57,9 @@ export class Const {
       throw new Error(`a declaration in a parametric environment can't ` +
       `be tested independently`)
     }
-    const tc = new TestContext(this.env)
+    const tc = new TestContext({
+      env: this.env
+    })
     return this.doTest(tc, value, args)
   }
 
