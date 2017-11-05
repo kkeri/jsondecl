@@ -1,6 +1,7 @@
 import { readFileSync } from 'fs'
 import { dirname, join } from 'path'
 import { parse } from './parser'
+import { Context } from './context'
 import * as model from './model'
 import * as builtin from './builtin'
 
@@ -11,14 +12,18 @@ const builtins = compileBuiltins(builtin)
  * @param {string} str - source code
  * @param {object} opts - provides resources and informations
  */
-export function compile (str, opts = {}) {
+export function compile (str, {
+  diag,
+  filename,
+  importPath
+} = {}) {
   const module_ = parse(str, {
-    error: opts.error
+    diag
   })
   if (!module_) return null
   const cc = new CompilerContext(module_, {
-    error: opts.error || function () {},
-    importPath: opts.importPath || (opts.filename && dirname(opts.filename)) || '.'
+    diag,
+    importPath: importPath || (filename && dirname(filename)) || '.'
   })
   build(module_, cc)
   if (cc.errors) return null
@@ -27,21 +32,25 @@ export function compile (str, opts = {}) {
   return module_
 }
 
-export function compileFile (fname, opts = {}) {
-  let src = readFileSync(fname, opts.encoding || 'utf8')
-  let copts = Object.create(opts)
-  copts.filename = fname
-  return compile(src, copts)
+export function compileFile (filename, {
+  diag,
+  encoding = 'utf8'
+} = {}) {
+  let src = readFileSync(filename, encoding)
+  return compile(src, {
+    diag,
+    filename
+  })
 }
 
-class CompilerContext {
-  constructor (module_, opts) {
+class CompilerContext extends Context {
+  constructor (module_, { diag, importPath }) {
+    super({ diag })
+    this.importPath = importPath
     this.module = module_
-    this.opts = opts
-    this.errors = 0
+    this.env = builtins
     this.exportCount = 0
     this.dynamicDepth = 0
-    this.env = builtins
   }
 
   createEnv () {
@@ -57,17 +66,17 @@ class CompilerContext {
     this.env = Object.getPrototypeOf(this.env)
   }
 
-  lookup (id) {
+  lookup (id, node) {
     if (id in this.env) {
       return this.env[id]
     } else {
-      this.error(`${id}: undeclared identifier`)
+      this.error(`${id}: undeclared identifier`, node)
     }
   }
 
-  bind (id, value) {
+  bind (id, value, node) {
     if (this.env.hasOwnProperty(id)) {
-      this.error(`${id}: duplicate identifier`)
+      this.error(`${id}: duplicate identifier`, node)
     } else {
       this.env[id] = value
     }
@@ -79,16 +88,11 @@ class CompilerContext {
       this.module.exports[id] = node
     } else {
       if (this.module.defaultExport) {
-        this.error(`duplicate default export`)
+        this.error(`duplicate default export`, node)
       } else {
         this.module.defaultExport = node
       }
     }
-  }
-
-  error (msg) {
-    this.errors++
-    this.opts.error(msg)
   }
 }
 
@@ -108,37 +112,40 @@ const builder = {
     }
     cc.leaveEnv()
     if (!cc.exportCount) {
-      cc.error(`a module should export something`)
+      cc.error(`a module should export something`, node)
     }
   },
 
   Import (node, cc) {
-    if (!cc.opts.importPath) {
-      cc.error(`using import requires the 'importPath' option`)
+    if (!cc.importPath) {
+      cc.error(`using import requires the 'importPath' option`, node)
       return
     }
-    const modulePath = join(cc.opts.importPath, node.moduleSpec)
+    const modulePath = join(cc.importPath, node.moduleSpec)
     let donor
     try {
       donor = require(modulePath)
     } catch (e) {
       if (e.code === 'MODULE_NOT_FOUND') {
-        cc.error(e.message)
+        cc.error(e.message, node)
         return
       }
     }
     for (let item of node.importList) {
       if (item.originalId in donor) {
-        cc.bind(item.localId, importValue(donor[item.originalId],
-            item.originalId,
-            item.localId,
-            node.moduleSpec,
-            cc.error.bind(cc)
+        try {
+          cc.bind(item.localId, importValue(donor[item.originalId],
+              item.originalId,
+              item.localId,
+              node.moduleSpec
+            )
           )
-        )
+        } catch (e) {
+          cc.error(e.message, item)
+        }
       } else {
         cc.error(`${item.originalId}: identifier not defined in module ` +
-          `'${node.moduleSpec}'`)
+          `'${node.moduleSpec}'`, item)
       }
     }
   },
@@ -196,13 +203,13 @@ const builder = {
 
   RegExp_ (node, cc) {
     if (node.flags && node.flags !== 'i') {
-      cc.error(`'${node.flags}': illegal regexp flag (only 'i' is allowed)`)
+      cc.error(`'${node.flags}': illegal regexp flag (only 'i' is allowed)`, node)
       return
     }
     try {
       node.regexp = new RegExp(node.body, node.flags)
     } catch (e) {
-      cc.error(e.message)
+      cc.error(e.message, node)
     }
   }
 }
@@ -277,9 +284,8 @@ const resolver = {
  * @param {string} originalId foreign id of the imported element
  * @param {string} localId local id of the imported element
  * @param {string} moduleSpec foreign module name for diagnostics
- * @param {function} error emits diagnostic messages
  */
-function importValue (value, originalId, localId, moduleSpec, error) {
+function importValue (value, originalId, localId, moduleSpec) {
   switch (typeof value) {
     case 'function':
       return new model.NativePattern(value)
@@ -287,27 +293,26 @@ function importValue (value, originalId, localId, moduleSpec, error) {
       if (value instanceof RegExp) {
         return model.RegExp_.fromRegExp(value)
       } else if (Array.isArray(value)) {
-        error(`${originalId} imported from '${moduleSpec}': can't import an array`)
+        throw new Error(`${originalId} imported from '${moduleSpec}': ` +
+          `can't import an array`)
       } else {
         return value
       }
-      break
     case 'number':
     case 'string':
     case 'null':
     case 'boolean':
       return new model.Literal(value)
     default:
-      error(`${originalId} imported from '${moduleSpec}' has ` +
+      throw new Error(`${originalId} imported from '${moduleSpec}' has ` +
         `illegal type '${typeof value}'`)
-      return new model.Literal(value)
   }
 }
 
 function compileBuiltins (builtin) {
   let decls = {}
   for (let b in builtin) {
-    decls[b] = importValue(builtin[b], b, b, './builtin', _ => null)
+    decls[b] = importValue(builtin[b], b, b, './builtin')
   }
   return decls
 }

@@ -8,15 +8,19 @@ export class Module {
     this.defaultExport = undefined
   }
 
-  test (value, id = '') {
+  test (value, {
+    id,
+    diag = function (msg) {}
+  } = {}) {
     const tc = new TestContext({
-      env: this.env
+      env: this.env,
+      diag
     })
-    if (id === '') {
+    if (typeof (id) !== 'string') {
       if (!this.defaultExport) {
         throw new Error('attempt to test against the default declaration but it is not declared')
       }
-      return this.defaultExport.doEval(tc).doTest(tc, value)
+      return this.defaultExport.doEval(tc).doTest(tc, value) && tc.errors === 0
     } else {
       if (!(id in this.exports)) {
         throw new Error(`attempt to test against '${id}' but it is not declared`)
@@ -252,7 +256,7 @@ export class NativePattern extends Expression {
   }
 
   doTest (tc, value) {
-    return this.fn(value)
+    return this.fn.call(tc, value)
   }
 }
 

@@ -6,13 +6,17 @@ import * as model from './model'
 var parser
 var semantics
 
-export function parse (str, opts = {}) {
+export function parse (str, {
+  diag = function (desc) {}
+}) {
   if (!parser) {
     initParser()
   }
   let mr = parser.match(str)
   if (mr.failed()) {
-    if (opts.error) opts.error(mr.message)
+    diag({
+      message: mr.message
+    })
     return null
   } else {
     return semantics(mr).model()
