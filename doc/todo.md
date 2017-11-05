@@ -18,6 +18,11 @@ Wish list:
 - a user provided set may be either a plain object or an ES6 Set
 - a failed test shouldn't modify a user defined set
 
+## contexts
+
+- proper diagnostic messages from the parser
+- assign source location to diagnostic messages
+
 ## compiler
 
 - mutual dependency between modules
@@ -34,6 +39,7 @@ Wish list:
 
 ## runtime
 
+- env object without standard prototype
 - detect mutual dependency
 - add exception handling to native patterns and macros
 - add error output to Module.test()
@@ -58,6 +64,9 @@ Wish list:
 ## docs
 
 - API
+  - compilation
+  - validation
+  - error reporting
 
 - module structure
   - import
