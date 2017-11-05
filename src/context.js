@@ -1,12 +1,54 @@
 
-export class TestContext {
+export class Context {
+  constructor ({
+    diag = function (desc) {}
+  } = {}) {
+    this.diag = diag
+    this.warnings = 0
+    this.errors = 0
+  }
+
+  info (msg, node) {
+    this.diag({
+      message: msg,
+      severity: 'info'
+    })
+  }
+
+  warning (msg, node) {
+    this.warnings++
+    this.diag({
+      message: msg,
+      severity: 'warning'
+    })
+  }
+
+  error (msg, node) {
+    this.errors++
+    this.diag({
+      message: msg,
+      severity: 'error'
+    })
+  }
+
+  fatal (msg, node) {
+    this.errors++
+    this.diag({
+      message: msg,
+      severity: 'error',
+      fatal: true
+    })
+  }
+}
+
+export class TestContext extends Context {
   constructor ({
     env = {},
-    error = function (msg, node) {}
+    diag
   } = {}) {
-    this.pathStack = []
+    super({ diag })
     this.env = env
-    this.error = error
+    this.pathStack = []
     this.tr = {
       matchSet: null,
       modifiedSets: []
