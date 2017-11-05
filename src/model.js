@@ -1,5 +1,6 @@
 import { TestContext } from './context'
 import { TransactionalMap } from './map'
+import { FatalError } from './util'
 
 export class Module {
   constructor (declList) {
@@ -12,20 +13,27 @@ export class Module {
     id,
     diag = function (msg) {}
   } = {}) {
-    const tc = new TestContext({
-      env: this.env,
-      diag
-    })
+    let expr
     if (typeof (id) !== 'string') {
       if (!this.defaultExport) {
         throw new Error('attempt to test against the default declaration but it is not declared')
       }
-      return this.defaultExport.doEval(tc).doTest(tc, value) && tc.errors === 0
+      expr = this.defaultExport
     } else {
       if (!(id in this.exports)) {
         throw new Error(`attempt to test against '${id}' but it is not declared`)
       }
-      return this.exports[id].doTest(tc, value)
+      expr = this.exports[id]
+    }
+    try {
+      const tc = new TestContext({ env: this.env, diag })
+      return expr.doEval(tc).doTest(tc, value) && tc.errors === 0
+    } catch (e) {
+      if (e instanceof FatalError) {
+        throw new Error('Fatal error: ' + e.message)
+      } else {
+        throw e
+      }
     }
   }
 }
@@ -70,12 +78,20 @@ export class Const {
   doEval (tc) {
     if (!('value' in this)) {
       if (this.busy) {
-        tc.error(`circular reference detected while evaluating const '${this.id}'`)
-        return undefined
+        throw new FatalError('circular', this, 'Circular reference detected')
       }
       this.busy = true
-      this.value = this.body.doEval(tc)
-      this.busy = false
+      try {
+        this.value = this.body.doEval(tc)
+      } catch (e) {
+        if (e instanceof FatalError && e.type === 'circular') {
+          tc.fatal(`circular reference detected while evaluating const '${this.id}'`)
+          if (e.ref === this) e.type = 'quit'
+        }
+        throw e
+      } finally {
+        this.busy = false
+      }
     }
     return this.value
   }

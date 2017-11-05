@@ -14,3 +14,11 @@ export function arrayToJsonPath (arr) {
   }
   return path
 }
+
+export class FatalError {
+  constructor (type, ref, msg) {
+    this.type = type
+    this.ref = ref
+    this.message = msg
+  }
+}
