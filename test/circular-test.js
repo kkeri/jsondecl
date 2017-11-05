@@ -7,8 +7,7 @@ const FatalError = require('../lib/util').FatalError
 
 function compile(str) {
   return _compile(str, {
-    filename: __filename,
-    // error: (str) => console.log(str)
+    filename: __filename
   })
 }
 
