@@ -7,10 +7,10 @@
     "standard": "standard src/*.js",
     "test": "standard src/*.js && tap -J -b test/*.js",
     "build": "npm run build-babel && npm run build-ohm",
-    "build-babel": "babel --presets=es2015 src --out-dir lib --source-maps",
+    "build-babel": "babel --presets=es2015 src --out-dir lib --source-maps inline",
     "build-ohm": "node ohm/build",
     "watch": "concurrently --names \"ohm,babel\" -p \"[{name}]\" -c cyan,magenta \"npm run watch-ohm\" \"npm run watch-babel\"",
-    "watch-babel": "babel --presets=es2015 src --out-dir lib --source-maps --watch",
+    "watch-babel": "babel --presets=es2015 src --out-dir lib --source-maps inline --watch",
     "watch-ohm": "watch-run -i -p ohm/parser.ohm node ohm/build"
   },
   "precommit": [
