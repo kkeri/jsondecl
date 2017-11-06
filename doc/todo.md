@@ -40,9 +40,7 @@ Wish list:
 ## runtime
 
 - env object without standard prototype
-- detect mutual dependency
 - add exception handling to native patterns and macros
-- add error output to Module.test()
 
 ## native patterns
 
@@ -76,6 +74,8 @@ Wish list:
 
 - patterns
   - types
+    - arrays
+      - empty array patterns and cardinality  
   - combinators
   - functions and macros
   - uniqueness
