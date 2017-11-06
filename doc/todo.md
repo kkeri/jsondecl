@@ -1,12 +1,8 @@
-## parser
+## language
 
 - unescape string literals
 - functions
 - support all forms of ES6 import
-
-## model
-
-- rename doEval and doTest
 - exclusive or combinator (oneOf)
 
 ## sets
@@ -18,9 +14,12 @@ Wish list:
 - a user provided set may be either a plain object or an ES6 Set
 - a failed test shouldn't modify a user defined set
 
+## modules
+
+- function for setting default options
+
 ## contexts
 
-- proper diagnostic messages from the parser
 - assign source location to diagnostic messages
 
 ## compiler
@@ -34,16 +33,24 @@ Wish list:
 ## optimization
 
 - eliminate simple identifier renamings
+- protect the default export from multiple evaluation
 
 ## runtime
 
 - env object without standard prototype
 - add exception handling to native patterns and macros
 
-## native patterns
+## diagnostics
 
-- emit diagnostic messages on error
-- add warn()
+- proper diagnostic messages from the parser
+- diagnostics should be transactional (except fatal errors)
+- custom error formatter (the user may want error messages that refer to the 
+  validated data but not to jsondl)
+- emit diagnostic messages from native validators
+
+## native validators
+
+- implement errorlevel (warn)
 
 ## to be decided
 
@@ -52,6 +59,7 @@ Wish list:
 
 ## perspectives
 
+- strict mode (ban extra properties and array elements)
 - array sections [ ] :: [ ]
 - default value for absent properties
 - arithmetic expressions and constraints
