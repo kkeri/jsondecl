@@ -111,13 +111,6 @@ test('grouping', t => {
   t.done()
 })
 
-test('import', t => {
-  t.match(compile('import { a } from "./module/test"; a').test(3), true)
-  t.match(compile('import { regex } from "./module/test"; regex').test('reg'), true)
-  t.match(compile('import { a as x } from "./module/test"; x').test(3), true)
-  t.done()
-})
-
 test('let...in', t => {
   t.match(compile('let a = 1 in a').test(0), false)
   t.match(compile('let a = 1 in a').test(1), true)
