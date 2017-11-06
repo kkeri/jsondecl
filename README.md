@@ -28,5 +28,4 @@ if (personDecl.test({ name: 'Dan', age: '25' })) {
 
 
 *JSONDL is pre-alpha.
-To see more of its features, please look at functional tests in `test/run-test.js`.*
-
+To see more of its features, please look at functional tests in the `test` directory.*
