@@ -6,11 +6,11 @@
 
 ## model
 
+- rename doEval and doTest
 - exclusive or combinator (oneOf)
 
 ## sets
 
-- write those unit tests
 - set lifetime should be the same as transaction lifetime
 
 Wish list:
@@ -27,15 +27,13 @@ Wish list:
 
 - mutual dependency between modules
 - warning: cardinality defined on empty array pattern
-- how to pass errors to the user
 - handle error location
 - dynamic cardinality
 - static evaluation as compilation and optimization technique
 
 ## optimization
 
-- eliminate simple renamings
-- what about circular references?
+- eliminate simple identifier renamings
 
 ## runtime
 
@@ -44,7 +42,7 @@ Wish list:
 
 ## native patterns
 
-- inside -> member or element
+- emit diagnostic messages on error
 - add warn()
 
 ## to be decided

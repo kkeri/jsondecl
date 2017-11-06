@@ -80,7 +80,7 @@ export function unique (value, map) {
   return true
 }
 
-export function inside (value, map) {
+export function elementof (value, map) {
   if (!(map instanceof TransactionalMap)) {
     // todo: error message
     return false

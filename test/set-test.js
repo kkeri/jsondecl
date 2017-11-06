@@ -29,13 +29,13 @@ test('uniqueness', t => {
 })
 
 test('set inclusion', t => {
-  t.match(compile('const s = set; inside(s)').test(1), false)
-  t.match(compile('const s = 1; inside(s)').test(1), false)
-  t.match(compile('const s = set; unique(s) & inside(s)').test(1), true)
-  t.match(compile('const s = set; inside(s) & unique(s)').test(1), false)
-  t.match(compile('const s = set; { "a": unique(s) } & { "b": inside(s) }')
+  t.match(compile('const s = set; elementof(s)').test(1), false)
+  t.match(compile('const s = 1; elementof(s)').test(1), false)
+  t.match(compile('const s = set; unique(s) & elementof(s)').test(1), true)
+  t.match(compile('const s = set; elementof(s) & unique(s)').test(1), false)
+  t.match(compile('const s = set; { "a": unique(s) } & { "b": elementof(s) }')
   .test({ a: 9, b: 9 }), true)
-  t.match(compile('const s = set; { "a": unique(s) } & { "b": inside(s) }')
+  t.match(compile('const s = set; { "a": unique(s) } & { "b": elementof(s) }')
   .test({ a: 9, b: 7 }), false)
 
   t.done()
