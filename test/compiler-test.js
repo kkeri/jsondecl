@@ -248,14 +248,14 @@ test('object', t => {
 test('valid function call', t => {
   t.match(compile('eq()'), {
     defaultExport: {
-      // func: { doEval: Function, doTest: Function },
+      // func: { eval: Function, test: Function },
       args: [
       ]
     }
   })
   t.match(compile('eq(1)'), {
     defaultExport: {
-      // func: { doEval: Function, doTest: Function },
+      // func: { eval: Function, test: Function },
       args: [
         { value: 1 }
       ]
@@ -263,7 +263,7 @@ test('valid function call', t => {
   })
   t.match(compile('eq(1, 2)'), {
     defaultExport: {
-      // func: { doEval: Function, doTest: Function },
+      // func: { eval: Function, test: Function },
       args: [
         { value: 1 },
         { value: 2 }
@@ -272,7 +272,7 @@ test('valid function call', t => {
   })
   t.match(compile('closed({})'), {
     defaultExport: {
-      // func: { doEval: Function, doTest: Function },
+      // func: { eval: Function, test: Function },
       args: [
         {
           propertyList: []
@@ -282,7 +282,7 @@ test('valid function call', t => {
   })
   t.match(compile('closed({ "a": 1 })'), {
     defaultExport: {
-      // func: { doEval: Function, doTest: Function },
+      // func: { eval: Function, test: Function },
       args: [
         {
           propertyList: [

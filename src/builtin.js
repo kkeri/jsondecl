@@ -40,11 +40,11 @@ class ClosedPattern extends Expression {
     this.pattern = pattern
   }
 
-  doTest (tc, value) {
+  test (tc, value) {
     if (Array.isArray(value)) {
       let prevArrayMatchLimit = tc.tr.arrayMatchLimit
       tc.tr.arrayMatchLimit = 0
-      const match = this.pattern.doEval(tc).doTest(tc, value)
+      const match = this.pattern.eval(tc).test(tc, value)
       let limit = tc.tr.arrayMatchLimit
       tc.tr.arrayMatchLimit = Math.max(prevArrayMatchLimit, limit)
       return match && limit === value.length
@@ -52,7 +52,7 @@ class ClosedPattern extends Expression {
       const savedMatchSet = tc.tr.matchSet
       const localMatchSet = {}
       tc.tr.matchSet = localMatchSet
-      const match = this.pattern.doEval(tc).doTest(tc, value)
+      const match = this.pattern.eval(tc).test(tc, value)
       tc.tr.matchSet = savedMatchSet
       if (!match) return false
       for (let name in value) {

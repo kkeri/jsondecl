@@ -53,7 +53,7 @@ export class TransactionalMap {
     this.tr = this.trStack.pop()
   }
 
-  doEval (tc) {
+  eval (tc) {
     return this
   }
 }

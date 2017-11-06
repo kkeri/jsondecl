@@ -51,7 +51,7 @@ test('eval', t => {
   let tc = new TestContext()
 
   let map = new TransactionalMap(tc)
-  t.equal(map.doEval(tc), map)
+  t.equal(map.eval(tc), map)
 
   t.done()
 })

@@ -27,7 +27,7 @@ export class Module {
     }
     try {
       const tc = new TestContext({ env: this.env, diag })
-      return expr.doEval(tc).doTest(tc, value) && tc.errors === 0
+      return expr.eval(tc).test(tc, value) && tc.errors === 0
     } catch (e) {
       if (e instanceof FatalError) {
         throw new Error('Fatal error: ' + e.message)
@@ -64,25 +64,14 @@ export class Const {
     this.body = body
   }
 
-  test (value, args) {
-    if (!this.env) {
-      throw new Error(`a declaration in a parametric environment can't ` +
-      `be tested independently`)
-    }
-    const tc = new TestContext({
-      env: this.env
-    })
-    return this.doTest(tc, value, args)
-  }
-
-  doEval (tc) {
+  eval (tc) {
     if (!('value' in this)) {
       if (this.busy) {
         throw new FatalError('circular', this, 'Circular reference detected')
       }
       this.busy = true
       try {
-        this.value = this.body.doEval(tc)
+        this.value = this.body.eval(tc)
       } catch (e) {
         if (e instanceof FatalError && e.type === 'circular') {
           tc.fatal(`circular reference detected while evaluating const '${this.id}'`)
@@ -96,8 +85,8 @@ export class Const {
     return this.value
   }
 
-  doTest (tc, value, args) {
-    return this.expr.doTest(tc, value, args)
+  test (tc, value, args) {
+    return this.expr.test(tc, value, args)
   }
 }
 
@@ -110,11 +99,11 @@ export class Expression {
   //   }
   // }
 
-  doEval (tc) {
+  eval (tc) {
     return this
   }
 
-  doTest (tc, value) {
+  test (tc, value) {
     tc.error(`the expression can't be used as pattern`)
     return false
   }
@@ -142,14 +131,14 @@ export class LocalEnvironment extends Expression {
     this.body = body
   }
 
-  doEval (tc) {
+  eval (tc) {
     let savedEnv = tc.env
     if (this.env) {
       tc.env = this.env
     } else {
       tc.env = Object.assign(Object.create(tc.env), this.staticEnv)
     }
-    let result = this.body.doEval(tc)
+    let result = this.body.eval(tc)
     tc.env = savedEnv
     return result
   }
@@ -161,11 +150,11 @@ export class OrPattern extends Expression {
     this.items = items
   }
 
-  doTest (tc, value) {
+  test (tc, value) {
     let result = false
     for (let item of this.items) {
       tc.begin()
-      if (item.doEval(tc).doTest(tc, value)) {
+      if (item.eval(tc).test(tc, value)) {
         tc.commit()
         result = true
         // todo: continue iteration only if unique or closed is in effect
@@ -183,9 +172,9 @@ export class AndPattern extends Expression {
     this.items = items
   }
 
-  doTest (tc, value) {
+  test (tc, value) {
     for (let item of this.items) {
-      if (!item.doEval(tc).doTest(tc, value)) {
+      if (!item.eval(tc).test(tc, value)) {
         return false
       }
     }
@@ -199,9 +188,9 @@ export class LogicalNot extends Expression {
     this.expr = expr
   }
 
-  doTest (tc, value) {
+  test (tc, value) {
     tc.begin()
-    var result = !this.expr.doEval(tc).doTest(tc, value)
+    var result = !this.expr.eval(tc).test(tc, value)
     tc.rollback()
     return result
   }
@@ -214,8 +203,8 @@ export class Member extends Expression {
     this.id = id
   }
 
-  doEval (tc) {
-    return this.expr.doEval(tc).getChild(tc, this.id)
+  eval (tc) {
+    return this.expr.eval(tc).getChild(tc, this.id)
   }
 }
 
@@ -225,8 +214,8 @@ export class Reference extends Expression {
     this.id = id
   }
 
-  doEval (tc) {
-    return tc.env[this.id].doEval(tc)
+  eval (tc) {
+    return tc.env[this.id].eval(tc)
   }
 }
 
@@ -237,8 +226,8 @@ export class Call extends Expression {
     this.args = args
   }
 
-  doEval (tc) {
-    let func = this.expr.doEval(tc)
+  eval (tc) {
+    let func = this.expr.eval(tc)
     return func.call(tc, this.args)
   }
 }
@@ -263,15 +252,15 @@ export class NativePattern extends Expression {
 
   call (tc, args) {
     let fn = this.fn
-    args = args.map(arg => arg.doEval(tc).getNativeValue(tc))
+    args = args.map(arg => arg.eval(tc).getNativeValue(tc))
     return new (class extends Expression {
-      doTest (tc, value) {
+      test (tc, value) {
         return fn.call(tc, value, ...args)
       }
     })()
   }
 
-  doTest (tc, value) {
+  test (tc, value) {
     return this.fn.call(tc, value)
   }
 }
@@ -282,13 +271,13 @@ export class ObjectPattern extends Expression {
     this.propertyList = propertyList
   }
 
-  doTest (tc, value) {
+  test (tc, value) {
     if (typeof value !== 'object' || value === null || Array.isArray(value)) {
       return false
     }
     tc.pathStack.push('')
     for (let prop of this.propertyList) {
-      if (!prop.doTest(tc, value)) return false
+      if (!prop.test(tc, value)) return false
     }
     tc.pathStack.pop()
     return true
@@ -303,7 +292,7 @@ export class ArrayPattern extends Expression {
     this.maxCount = maxCount
   }
 
-  doTest (tc, value) {
+  test (tc, value) {
     if (!Array.isArray(value)) {
       return false
     }
@@ -352,7 +341,7 @@ export class PropertyPattern extends Expression {
     this.maxCount = maxCount
   }
 
-  doTest (tc, value) {
+  test (tc, value) {
     // this is checked in the object pattern
     // if (typeof value !== 'object' || value === null || Array.isArray(value)) {
     //   return false
@@ -361,11 +350,11 @@ export class PropertyPattern extends Expression {
     if (tc.tr.matchSet) {
       for (let name in value) {
         tc.pathStack[tc.pathStack.length - 1] = name
-        if (this.name.doEval(tc).doTest(tc, name)) {
+        if (this.name.eval(tc).test(tc, name)) {
           tc.tr.matchSet[name] = true
           let savedMatchSet = tc.tr.matchSet
           tc.tr.matchSet = null
-          const match = this.value.doEval(tc).doTest(tc, value[name])
+          const match = this.value.eval(tc).test(tc, value[name])
           tc.tr.matchSet = savedMatchSet
           if (match) {
             occurs++
@@ -377,8 +366,8 @@ export class PropertyPattern extends Expression {
     } else {
       for (let name in value) {
         tc.pathStack[tc.pathStack.length - 1] = name
-        if (this.name.doEval(tc).doTest(tc, name)) {
-          if (this.value.doEval(tc).doTest(tc, value[name])) {
+        if (this.name.eval(tc).test(tc, name)) {
+          if (this.value.eval(tc).test(tc, value[name])) {
             occurs++
           } else {
             return false
@@ -402,7 +391,7 @@ export class ArrayItemPattern extends Expression {
   testAtIndex (tc, value, idx) {
     let occurs = 0
     while (occurs < this.maxCount &&
-      idx < value.length && this.value.doEval(tc).doTest(tc, value[idx])
+      idx < value.length && this.value.eval(tc).test(tc, value[idx])
     ) {
       idx++
       occurs++
@@ -424,7 +413,7 @@ export class Literal extends Expression {
     return this.value
   }
 
-  doTest (tc, value) {
+  test (tc, value) {
     return this.value === value
   }
 }
@@ -447,13 +436,13 @@ export class RegExp_ extends Expression {
     return this.regexp
   }
 
-  doTest (tc, value) {
+  test (tc, value) {
     return this.regexp.test(value)
   }
 }
 
 export class This extends Expression {
-  doEval (tc) {
+  eval (tc) {
     return tc.this
   }
 }
