@@ -85,8 +85,8 @@ export class Const {
     return this.value
   }
 
-  test (tc, value, args) {
-    return this.expr.test(tc, value, args)
+  test (tc, value) {
+    return this.expr.test(tc, value)
   }
 }
 
