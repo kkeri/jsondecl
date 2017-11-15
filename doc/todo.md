@@ -1,9 +1,10 @@
 ## language
 
 - unescape string literals
-- functions
+- support functions
 - support all forms of ES6 import
 - exclusive or combinator (oneOf)
+- varify that the JSONDL is superset of JSON (character set compatibility!)
 
 ## sets
 
@@ -16,6 +17,9 @@ Wish list:
 
 ## modules
 
+- import: use .jsondl extension with extensionless file names
+- mutual dependency between modules
+- handle export-import cycles (https://github.com/webpack/webpack/issues/1788)
 - function for setting default options
 
 ## contexts
@@ -24,11 +28,11 @@ Wish list:
 
 ## compiler
 
-- mutual dependency between modules
+- precise error reporting from the parser (report multiple errors)
 - warning: cardinality defined on empty array pattern
 - handle error location
-- dynamic cardinality
 - static evaluation as compilation and optimization technique
+- dynamic cardinality
 
 ## optimization
 
@@ -37,20 +41,22 @@ Wish list:
 
 ## runtime
 
+- distinguish runtime errors from validation errors (runtime errors must throw)
+- assign stack trace to runtime errors
 - env object without standard prototype
-- add exception handling to native patterns and macros
 
 ## diagnostics
 
-- proper diagnostic messages from the parser
-- diagnostics should be transactional (except fatal errors)
+- proper diagnostic messages from the parser (using ohm internals)
+- validation diagnostics should be transactional
 - custom error formatter (the user may want error messages that refer to the 
   validated data but not to jsondl)
-- emit diagnostic messages from native validators
 
-## native validators
+## native extensions
 
+- exception handling when calling native extensions
 - implement errorlevel (warn)
+- emit diagnostic messages from built in extensions
 
 ## to be decided
 
@@ -61,7 +67,7 @@ Wish list:
 
 - strict mode (ban extra properties and array elements)
 - array sections [ ] :: [ ]
-- default value for absent properties
+- setting default value for absent properties
 - arithmetic expressions and constraints
 - compilation to javascript
 
@@ -86,6 +92,9 @@ Wish list:
   - functions and macros
   - uniqueness
   - closedness
+
+- Runtime
+  - runtime errors
 
 - pattern matching
   - order of evaluation
