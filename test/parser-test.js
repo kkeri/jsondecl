@@ -2,10 +2,11 @@
 
 const test = require('tap').test
 const _parse = require('../lib/parser').parse
+const Diagnostics = require('../lib/diag').Diagnostics
 
 function parse (str) {
   return _parse(str, {
-    // error: (str) => console.error('\n', str)
+    diag: new Diagnostics()
   })
 }
 
@@ -76,7 +77,7 @@ test('invalid regex', t => {
 })
 
 test('valid regex', t => {
-  //t.notEqual(parse('//'), null)
+  // t.notEqual(parse('//'), null)
   t.notEqual(parse('/a/'), null)
   t.notEqual(parse('/ abc/'), null)
   t.notEqual(parse('/a/g'), null)
@@ -286,5 +287,3 @@ test('valid let...in', t => {
   t.notEqual(parse('let a = 1, b = 2 in let c = 3 in a'), null)
   t.done()
 })
-
-

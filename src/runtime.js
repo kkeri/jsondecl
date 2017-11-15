@@ -1,52 +1,10 @@
+import { Diagnostics } from './diag'
 
-export class Context {
-  constructor ({
-    diag = function (desc) {}
+export class RuntimeContext {
+  constructor (env = {}, {
+    messages
   } = {}) {
-    this.diag = diag
-    this.warnings = 0
-    this.errors = 0
-  }
-
-  info (msg, node) {
-    this.diag({
-      message: msg,
-      severity: 'info'
-    })
-  }
-
-  warning (msg, node) {
-    this.warnings++
-    this.diag({
-      message: msg,
-      severity: 'warning'
-    })
-  }
-
-  error (msg, node) {
-    this.errors++
-    this.diag({
-      message: msg,
-      severity: 'error'
-    })
-  }
-
-  fatal (msg, node) {
-    this.errors++
-    this.diag({
-      message: msg,
-      severity: 'error',
-      fatal: true
-    })
-  }
-}
-
-export class TestContext extends Context {
-  constructor ({
-    env = {},
-    diag
-  } = {}) {
-    super({ diag })
+    this.diag = new Diagnostics(messages)
     this.env = env
     this.pathStack = []
     this.tr = {

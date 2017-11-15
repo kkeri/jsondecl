@@ -1,13 +1,10 @@
 'use strict'
 
 const test = require('tap').test
-const _compile = require('../lib/index').compile
-const model = require('../lib/model')
+const jsondl = require('../lib/index')
 
-function compile(str) {
-  return _compile(str, {
-    filename: __filename
-  })
+function compile (str) {
+  return jsondl.compile(str)
 }
 
 test('array', t => {
@@ -24,7 +21,7 @@ test('array', t => {
   t.match(compile('[string]').test([1]), false)
   t.match(compile('[string]').test(['a']), true)
   t.match(compile('[string]').test(['a', 1]), true)
-  
+
   t.match(compile('[number?]').test([]), true)
   t.match(compile('[number?]').test([1]), true)
   t.match(compile('[number?]').test([1, 2]), true)
@@ -52,7 +49,7 @@ test('array', t => {
   t.match(compile('[number{2}]').test([]), false)
   t.match(compile('[number{2}]').test([1]), false)
   t.match(compile('[number{2}]').test([1, 2]), true)
-  t.match(compile('[number{2}]').test(['a']), false )
+  t.match(compile('[number{2}]').test(['a']), false)
   t.match(compile('[number{2}]').test([1, 'a']), false)
 
   t.match(compile('[number, string]').test([1]), false)
@@ -78,27 +75,27 @@ test('closed array', t => {
   t.match(compile('closed([number] | [string])').test(['a']), true)
   t.match(compile('closed([number] | [string])').test([1, 1]), false)
   t.match(compile('closed([number] | [string])').test(['a', 1]), false)
-  
+
   t.match(compile('closed([string] | [string, number])').test(['a', 1]), true)
   t.match(compile('closed([string, number] | [string])').test(['a', 1]), true)
   t.match(compile('closed([string] & [string, number])').test(['a', 1]), true)
   t.match(compile('closed([string, number] & [string])').test(['a', 1]), true)
-  
+
   t.match(compile('closed([string] | [string, number])').test(['a', 1, 2]), false)
   t.match(compile('closed([string, number] | [string])').test(['a', 1, 2]), false)
   t.match(compile('closed([string] & [string, number])').test(['a', 1, 2]), false)
   t.match(compile('closed([string, number] & [string])').test(['a', 1, 2]), false)
-  
+
   t.match(compile('closed([number, any] & [any, string])').test([1, 'a']), true)
   t.match(compile('closed([number, any] & [any, string])').test([1, 'a', 2]), false)
-  
+
   t.match(compile('closed([[number]])').test([[1]]), true)
   t.match(compile('closed([[number]])').test([[1, 2]]), true)
   t.match(compile('closed([[number]])').test([[1], 2]), false)
 
   t.match(compile('closed(closed([number, string]))').test([1, 'a']), true)
   t.match(compile('closed(closed([number, string]))').test([1, 'a', 'b']), false)
-  
+
   t.done()
 })
 
@@ -141,14 +138,14 @@ test('array repetition', t => {
   t.match(compile('[number, string]{2}').test([1, 'a', 2]), false)
   t.match(compile('[number, string]{2}').test([1, 'a', 2, 'b']), true)
   t.match(compile('[number, string]{2}').test([1, 'a', 2, 'b', 3]), true)
-  
+
   t.done()
 })
 
 test('closed array repetitions', t => {
   t.match(compile('closed([number]?)').test([1, 2]), false)
   t.match(compile('closed([number]{0,2})').test([1, 2, 3]), false)
-  
+
   t.match(compile('closed([number, string]*)').test([]), true)
   t.match(compile('closed([number, string]*)').test([1]), false)
   t.match(compile('closed([number, string]*)').test([1, 'a']), true)
@@ -169,8 +166,8 @@ test('array combinations', t => {
   t.match(compile('[number] | [string]').test(['a']), true)
   t.match(compile('[number, number] | [number, string]').test([1, 1]), true)
   t.match(compile('[number, number] | [number, string]').test([1, 'a']), true)
-  
+
   t.match(compile('[number, any] & [any, string]').test([1, 'a']), true)
-  
+
   t.done()
 })

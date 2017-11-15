@@ -7,16 +7,14 @@ var parser
 var semantics
 
 export function parse (str, {
-  diag = function (desc) {}
+  diag
 }) {
   if (!parser) {
     initParser()
   }
   let mr = parser.match(str)
   if (mr.failed()) {
-    diag({
-      message: mr.message
-    })
+    diag.error(mr.message)
     return null
   } else {
     return semantics(mr).model()

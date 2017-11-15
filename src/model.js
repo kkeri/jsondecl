@@ -1,6 +1,6 @@
-import { TestContext } from './context'
+import { RuntimeContext } from './runtime'
 import { TransactionalMap } from './map'
-import { FatalError } from './util'
+import { RuntimeError } from './diag'
 
 export class Module {
   constructor (declList) {
@@ -10,31 +10,14 @@ export class Module {
   }
 
   test (value, {
-    id,
-    diag = function (msg) {}
+    messages,
+    runtime = new RuntimeContext(this.env, { messages })
   } = {}) {
-    let expr
-    if (typeof (id) !== 'string') {
-      if (!this.defaultExport) {
-        throw new Error('attempt to test against the default declaration but it is not declared')
-      }
-      expr = this.defaultExport
-    } else {
-      if (!(id in this.exports)) {
-        throw new Error(`attempt to test against '${id}' but it is not declared`)
-      }
-      expr = this.exports[id]
+    if (!this.defaultExport) {
+      throw new Error(`attempt to validate against the default export but it doesn't exist`)
     }
-    try {
-      const tc = new TestContext({ env: this.env, diag })
-      return expr.eval(tc).test(tc, value) && tc.errors === 0
-    } catch (e) {
-      if (e instanceof FatalError) {
-        throw new Error('Fatal error: ' + e.message)
-      } else {
-        throw e
-      }
-    }
+    let result = this.defaultExport.eval(runtime).test(runtime, value)
+    return result && !runtime.diag.hasError
   }
 }
 
@@ -64,18 +47,18 @@ export class Const {
     this.body = body
   }
 
-  eval (tc) {
+  eval (rc) {
     if (!('value' in this)) {
       if (this.busy) {
-        throw new FatalError('circular', this, 'Circular reference detected')
+        throw new RuntimeError('CIRCULAR-REF', this, 'Circular reference detected')
       }
       this.busy = true
       try {
-        this.value = this.body.eval(tc)
+        this.value = this.body.eval(rc)
       } catch (e) {
-        if (e instanceof FatalError && e.type === 'circular') {
-          tc.fatal(`circular reference detected while evaluating const '${this.id}'`)
-          if (e.ref === this) e.type = 'quit'
+        if (e instanceof RuntimeError && e.code === 'CIRCULAR-REF' && e.ref) {
+          rc.diag.error(`circular reference detected while evaluating const '${this.id}'`)
+          if (e.ref === this) e.ref = null
         }
         throw e
       } finally {
@@ -85,8 +68,8 @@ export class Const {
     return this.value
   }
 
-  test (tc, value) {
-    return this.expr.test(tc, value)
+  test (rc, value) {
+    return this.expr.test(rc, value)
   }
 }
 
@@ -99,27 +82,27 @@ export class Expression {
   //   }
   // }
 
-  eval (tc) {
+  eval (rc) {
     return this
   }
 
-  test (tc, value) {
-    tc.error(`the expression can't be used as pattern`)
+  test (rc, value) {
+    rc.diag.error(`the expression can't be used as pattern`)
     return false
   }
 
-  call (tc, args) {
-    tc.error(`the expression can't be called`)
+  call (rc, args) {
+    rc.diag.error(`the expression can't be called`)
     return this
   }
 
-  getChild (tc, id) {
-    tc.error(`property ${id} is not found`)
+  getChild (rc, id) {
+    rc.diag.error(`property ${id} is not found`)
     return this
   }
 
-  getNativeValue (tc) {
-    tc.error(`the expression can't be passed to a native pattern`)
+  getNativeValue (rc) {
+    rc.diag.error(`the expression can't be passed to a native pattern`)
     return null
   }
 }
@@ -131,15 +114,15 @@ export class LocalEnvironment extends Expression {
     this.body = body
   }
 
-  eval (tc) {
-    let savedEnv = tc.env
+  eval (rc) {
+    let savedEnv = rc.env
     if (this.env) {
-      tc.env = this.env
+      rc.env = this.env
     } else {
-      tc.env = Object.assign(Object.create(tc.env), this.staticEnv)
+      rc.env = Object.assign(Object.create(rc.env), this.staticEnv)
     }
-    let result = this.body.eval(tc)
-    tc.env = savedEnv
+    let result = this.body.eval(rc)
+    rc.env = savedEnv
     return result
   }
 }
@@ -150,16 +133,16 @@ export class OrPattern extends Expression {
     this.items = items
   }
 
-  test (tc, value) {
+  test (rc, value) {
     let result = false
     for (let item of this.items) {
-      tc.begin()
-      if (item.eval(tc).test(tc, value)) {
-        tc.commit()
+      rc.begin()
+      if (item.eval(rc).test(rc, value)) {
+        rc.commit()
         result = true
         // todo: continue iteration only if unique or closed is in effect
       } else {
-        tc.rollback()
+        rc.rollback()
       }
     }
     return result
@@ -172,9 +155,9 @@ export class AndPattern extends Expression {
     this.items = items
   }
 
-  test (tc, value) {
+  test (rc, value) {
     for (let item of this.items) {
-      if (!item.eval(tc).test(tc, value)) {
+      if (!item.eval(rc).test(rc, value)) {
         return false
       }
     }
@@ -188,10 +171,10 @@ export class LogicalNot extends Expression {
     this.expr = expr
   }
 
-  test (tc, value) {
-    tc.begin()
-    var result = !this.expr.eval(tc).test(tc, value)
-    tc.rollback()
+  test (rc, value) {
+    rc.begin()
+    var result = !this.expr.eval(rc).test(rc, value)
+    rc.rollback()
     return result
   }
 }
@@ -203,8 +186,8 @@ export class Member extends Expression {
     this.id = id
   }
 
-  eval (tc) {
-    return this.expr.eval(tc).getChild(tc, this.id)
+  eval (rc) {
+    return this.expr.eval(rc).getChild(rc, this.id)
   }
 }
 
@@ -214,8 +197,12 @@ export class Reference extends Expression {
     this.id = id
   }
 
-  eval (tc) {
-    return tc.env[this.id].eval(tc)
+  eval (rc) {
+    const target = rc.env[this.id]
+    if (!target) {
+      throw new RuntimeError('UNDEFINED-ID', this, `undefined identifier '${this.id}'`)
+    }
+    return target.eval(rc)
   }
 }
 
@@ -226,9 +213,9 @@ export class Call extends Expression {
     this.args = args
   }
 
-  eval (tc) {
-    let func = this.expr.eval(tc)
-    return func.call(tc, this.args)
+  eval (rc) {
+    let func = this.expr.eval(rc)
+    return func.call(rc, this.args)
   }
 }
 
@@ -239,7 +226,7 @@ export class Function_ extends Expression {
     this.body = body
   }
 
-  call (tc, args) {
+  call (rc, args) {
 
   }
 }
@@ -250,18 +237,18 @@ export class NativePattern extends Expression {
     this.fn = fn
   }
 
-  call (tc, args) {
+  call (rc, args) {
     let fn = this.fn
-    args = args.map(arg => arg.eval(tc).getNativeValue(tc))
+    args = args.map(arg => arg.eval(rc).getNativeValue(rc))
     return new (class extends Expression {
-      test (tc, value) {
-        return fn.call(tc, value, ...args)
+      test (rc, value) {
+        return fn.call(rc, value, ...args)
       }
     })()
   }
 
-  test (tc, value) {
-    return this.fn.call(tc, value)
+  test (rc, value) {
+    return this.fn.call(rc, value)
   }
 }
 
@@ -271,15 +258,15 @@ export class ObjectPattern extends Expression {
     this.propertyList = propertyList
   }
 
-  test (tc, value) {
+  test (rc, value) {
     if (typeof value !== 'object' || value === null || Array.isArray(value)) {
       return false
     }
-    tc.pathStack.push('')
+    rc.pathStack.push('')
     for (let prop of this.propertyList) {
-      if (!prop.test(tc, value)) return false
+      if (!prop.test(rc, value)) return false
     }
-    tc.pathStack.pop()
+    rc.pathStack.pop()
     return true
   }
 }
@@ -292,37 +279,37 @@ export class ArrayPattern extends Expression {
     this.maxCount = maxCount
   }
 
-  test (tc, value) {
+  test (rc, value) {
     if (!Array.isArray(value)) {
       return false
     }
-    let prevArrayMatchLimit = tc.tr.arrayMatchLimit
+    let prevArrayMatchLimit = rc.tr.arrayMatchLimit
     let idx = 0
     let rep = 0
-    tc.pathStack.push(0)
+    rc.pathStack.push(0)
     while (rep < this.maxCount) {
       let baseIdx = idx
       let match
-      [match, idx] = this.testItemsAtIndex(tc, value, idx)
+      [match, idx] = this.testItemsAtIndex(rc, value, idx)
       if (!match) break
       rep++
       if (idx === baseIdx) break
     }
-    tc.pathStack.pop()
+    rc.pathStack.pop()
     if (rep < this.minCount) {
       return false
     }
-    tc.tr.arrayMatchLimit = Math.max(prevArrayMatchLimit, idx)
+    rc.tr.arrayMatchLimit = Math.max(prevArrayMatchLimit, idx)
     return true
   }
 
-  testItemsAtIndex (tc, value, idx) {
+  testItemsAtIndex (rc, value, idx) {
     let baseIdx = idx
     for (let item of this.items) {
       let match
-      [match, idx] = item.testAtIndex(tc, value, idx)
+      [match, idx] = item.testAtIndex(rc, value, idx)
       if (!match) {
-        tc.pathStack.pop()
+        rc.pathStack.pop()
         return [false, baseIdx]
       }
     }
@@ -341,21 +328,21 @@ export class PropertyPattern extends Expression {
     this.maxCount = maxCount
   }
 
-  test (tc, value) {
+  test (rc, value) {
     // this is checked in the object pattern
     // if (typeof value !== 'object' || value === null || Array.isArray(value)) {
     //   return false
     // }
     let occurs = 0
-    if (tc.tr.matchSet) {
+    if (rc.tr.matchSet) {
       for (let name in value) {
-        tc.pathStack[tc.pathStack.length - 1] = name
-        if (this.name.eval(tc).test(tc, name)) {
-          tc.tr.matchSet[name] = true
-          let savedMatchSet = tc.tr.matchSet
-          tc.tr.matchSet = null
-          const match = this.value.eval(tc).test(tc, value[name])
-          tc.tr.matchSet = savedMatchSet
+        rc.pathStack[rc.pathStack.length - 1] = name
+        if (this.name.eval(rc).test(rc, name)) {
+          rc.tr.matchSet[name] = true
+          let savedMatchSet = rc.tr.matchSet
+          rc.tr.matchSet = null
+          const match = this.value.eval(rc).test(rc, value[name])
+          rc.tr.matchSet = savedMatchSet
           if (match) {
             occurs++
           } else {
@@ -365,9 +352,9 @@ export class PropertyPattern extends Expression {
       }
     } else {
       for (let name in value) {
-        tc.pathStack[tc.pathStack.length - 1] = name
-        if (this.name.eval(tc).test(tc, name)) {
-          if (this.value.eval(tc).test(tc, value[name])) {
+        rc.pathStack[rc.pathStack.length - 1] = name
+        if (this.name.eval(rc).test(rc, name)) {
+          if (this.value.eval(rc).test(rc, value[name])) {
             occurs++
           } else {
             return false
@@ -388,14 +375,14 @@ export class ArrayItemPattern extends Expression {
     this.maxCount = maxCount
   }
 
-  testAtIndex (tc, value, idx) {
+  testAtIndex (rc, value, idx) {
     let occurs = 0
     while (occurs < this.maxCount &&
-      idx < value.length && this.value.eval(tc).test(tc, value[idx])
+      idx < value.length && this.value.eval(rc).test(rc, value[idx])
     ) {
       idx++
       occurs++
-      tc.pathStack[tc.pathStack.size - 1] = idx
+      rc.pathStack[rc.pathStack.size - 1] = idx
     }
     return [occurs >= this.minCount, idx]
   }
@@ -409,11 +396,11 @@ export class Literal extends Expression {
     this.value = value
   }
 
-  getNativeValue (tc) {
+  getNativeValue (rc) {
     return this.value
   }
 
-  test (tc, value) {
+  test (rc, value) {
     return this.value === value
   }
 }
@@ -432,33 +419,33 @@ export class RegExp_ extends Expression {
     return obj
   }
 
-  getNativeValue (tc) {
+  getNativeValue (rc) {
     return this.regexp
   }
 
-  test (tc, value) {
+  test (rc, value) {
     return this.regexp.test(value)
   }
 }
 
 export class This extends Expression {
-  eval (tc) {
-    return tc.this
+  eval (rc) {
+    return rc.this
   }
 }
 
 export class SetConstructor extends Expression {
-  getNativeValue (tc) {
+  getNativeValue (rc) {
     if (!this.map) {
-      this.map = new TransactionalMap(tc)
+      this.map = new TransactionalMap(rc)
     }
     return this.map
   }
 
-  getChild (tc, id) {
+  getChild (rc, id) {
     switch (id) {
-      // case 'size': return new Literal(this.getNativeValue(tc).size())
-      default: return super.getChild(tc, id)
+      // case 'size': return new Literal(this.getNativeValue(rc).size())
+      default: return super.getChild(rc, id)
     }
   }
 }

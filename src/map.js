@@ -1,7 +1,7 @@
 
 export class TransactionalMap {
-  constructor (tc) {
-    this.tc = tc
+  constructor (rc) {
+    this.rc = rc
     this.map = new Map()
     this.tr = null
     this.mapStack = []
@@ -25,7 +25,7 @@ export class TransactionalMap {
   }
 
   set (key, value) {
-    if (this.tr !== this.tc.tr) this.begin(this.tc.tr)
+    if (this.tr !== this.rc.tr) this.begin(this.rc.tr)
     this.map.set(key, value)
     return this
   }
@@ -53,7 +53,7 @@ export class TransactionalMap {
     this.tr = this.trStack.pop()
   }
 
-  eval (tc) {
+  eval (rc) {
     return this
   }
 }

@@ -25,9 +25,9 @@ export const gt = (x, y) => number(x) && number(y) && x > y
 export const ge = (x, y) => number(x) && number(y) && x >= y
 
 class ClosedFunction extends Expression {
-  call (tc, [pattern]) {
+  call (rc, [pattern]) {
     if (!pattern) {
-      tc.error(`closed requires a pattern argument`)
+      rc.diag.error(`closed requires a pattern argument`)
       return new Expression()
     }
     return new ClosedPattern(pattern)
@@ -40,20 +40,20 @@ class ClosedPattern extends Expression {
     this.pattern = pattern
   }
 
-  test (tc, value) {
+  test (rc, value) {
     if (Array.isArray(value)) {
-      let prevArrayMatchLimit = tc.tr.arrayMatchLimit
-      tc.tr.arrayMatchLimit = 0
-      const match = this.pattern.eval(tc).test(tc, value)
-      let limit = tc.tr.arrayMatchLimit
-      tc.tr.arrayMatchLimit = Math.max(prevArrayMatchLimit, limit)
+      let prevArrayMatchLimit = rc.tr.arrayMatchLimit
+      rc.tr.arrayMatchLimit = 0
+      const match = this.pattern.eval(rc).test(rc, value)
+      let limit = rc.tr.arrayMatchLimit
+      rc.tr.arrayMatchLimit = Math.max(prevArrayMatchLimit, limit)
       return match && limit === value.length
     } else {
-      const savedMatchSet = tc.tr.matchSet
+      const savedMatchSet = rc.tr.matchSet
       const localMatchSet = {}
-      tc.tr.matchSet = localMatchSet
-      const match = this.pattern.eval(tc).test(tc, value)
-      tc.tr.matchSet = savedMatchSet
+      rc.tr.matchSet = localMatchSet
+      const match = this.pattern.eval(rc).test(rc, value)
+      rc.tr.matchSet = savedMatchSet
       if (!match) return false
       for (let name in value) {
         if (!(name in localMatchSet)) return false

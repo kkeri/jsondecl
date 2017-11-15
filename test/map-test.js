@@ -2,12 +2,12 @@
 
 const test = require('tap').test
 const TransactionalMap = require('../lib/map').TransactionalMap
-const TestContext = require('../lib/context').TestContext
+const RuntimeContext = require('../lib/runtime').RuntimeContext
 
 test('empty map', t => {
-  let tc = new TestContext()
+  let rc = new RuntimeContext()
 
-  let map = new TransactionalMap(tc)
+  let map = new TransactionalMap(rc)
   // t.match(map.size(), 0)
   t.match(map.has(1), false)
   t.match(map.get(1), undefined)
@@ -16,9 +16,9 @@ test('empty map', t => {
 })
 
 test('single item', t => {
-  let tc = new TestContext()
+  let rc = new RuntimeContext()
 
-  let map = new TransactionalMap(tc)
+  let map = new TransactionalMap(rc)
   map.set(1, 2)
   // t.match(map.size(), 1)
   t.match(map.has(1), true)
@@ -33,9 +33,9 @@ test('single item', t => {
 })
 
 test('two items', t => {
-  let tc = new TestContext()
+  let rc = new RuntimeContext()
 
-  let map = new TransactionalMap(tc)
+  let map = new TransactionalMap(rc)
   map.set(1, 2)
   map.set(2, 4)
   // t.match(map.size(), 2)
@@ -48,43 +48,43 @@ test('two items', t => {
 })
 
 test('eval', t => {
-  let tc = new TestContext()
+  let rc = new RuntimeContext()
 
-  let map = new TransactionalMap(tc)
-  t.equal(map.eval(tc), map)
+  let map = new TransactionalMap(rc)
+  t.equal(map.eval(rc), map)
 
   t.done()
 })
 
 test('rollback1', t => {
-  let tc = new TestContext()
+  let rc = new RuntimeContext()
 
-  let map = new TransactionalMap(tc)
+  let map = new TransactionalMap(rc)
 
-  tc.begin()
+  rc.begin()
   map.set(1, 3)
   t.match(map.has(1), true)
   t.match(map.get(1), 3)
 
-  tc.rollback()
+  rc.rollback()
   t.match(map.has(1), false)
 
   t.done()
 })
 
 test('rollback2', t => {
-  let tc = new TestContext()
+  let rc = new RuntimeContext()
 
-  let map = new TransactionalMap(tc)
+  let map = new TransactionalMap(rc)
   map.set(1, 2)
 
-  tc.begin()
+  rc.begin()
   map.set(1, 3)
   // t.match(map.size(), 1)
   t.match(map.has(1), true)
   t.match(map.get(1), 3)
 
-  tc.rollback()
+  rc.rollback()
   // t.match(map.size(), 1)
   t.match(map.has(1), true)
   t.match(map.get(1), 2)
@@ -93,34 +93,34 @@ test('rollback2', t => {
 })
 
 test('commit1', t => {
-  let tc = new TestContext()
+  let rc = new RuntimeContext()
 
-  let map = new TransactionalMap(tc)
+  let map = new TransactionalMap(rc)
 
-  tc.begin()
+  rc.begin()
   map.set(1, 3)
   t.match(map.has(1), true)
   t.match(map.get(1), 3)
 
-  tc.commit()
+  rc.commit()
   t.match(map.has(1), true)
   t.match(map.get(1), 3)
-  
+
   t.done()
 })
 
 test('commit2', t => {
-  let tc = new TestContext()
+  let rc = new RuntimeContext()
 
-  let map = new TransactionalMap(tc)
+  let map = new TransactionalMap(rc)
   map.set(1, 2)
 
-  tc.begin()
+  rc.begin()
   map.set(1, 3)
   t.match(map.has(1), true)
   t.match(map.get(1), 3)
 
-  tc.commit()
+  rc.commit()
   t.match(map.has(1), true)
   t.match(map.get(1), 3)
 
