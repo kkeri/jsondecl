@@ -27,4 +27,3 @@ test('misc', t => {
   t.match(util.arrayToJsonPath([1, 'a', '%']), '$[1].a["%"]')
   t.done()
 })
-

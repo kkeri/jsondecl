@@ -4,7 +4,7 @@ const test = require('tap').test
 const _compile = require('../lib/index').compile
 const model = require('../lib/model')
 
-function compile(str) {
+function compile (str) {
   return _compile(str, {
     filename: __filename
   })
