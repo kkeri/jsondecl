@@ -78,3 +78,46 @@ test('import default', t => {
   t.match(compile('import def from "./module/default-export"; def').test('default-export'), true)
   t.done()
 })
+
+test('import list', t => {
+  t.match(compile('import { } from "./module/test.js"; 1'), {
+    env: {
+    }
+  })
+  t.match(compile('import { a } from "./module/test.js"; 1'), {
+    env: {
+      a: { value: 3 }
+    }
+  })
+  t.match(compile('import { a, b } from "./module/test.js"; 1'), {
+    env: {
+      a: { value: 3 },
+      b: { value: 99 }
+    }
+  })
+  t.match(compile('import { regex } from "./module/test.js"; 1'), {
+    env: {
+      regex: { regexp: RegExp }
+    }
+  })
+  t.match(compile('import { nondef } from "./module/test.js"; 1'), null)
+  t.match(compile('import { undef } from "./module/test.js"; 1'), null)
+  t.match(compile('import { a, a } from "./module/test.js"; 1'), null)
+  t.match(compile('import { a } from "./module/nofile.js"; 1'), null)
+  t.done()
+})
+
+test('import rename', t => {
+  t.match(compile('import { a as x } from "./module/test.js"; 1'), {
+    env: {
+      x: { value: 3 }
+    }
+  })
+  t.match(compile('import { a as x, b } from "./module/test.js"; 1'), {
+    env: {
+      x: { value: 3 },
+      b: { value: 99 }
+    }
+  })
+  t.done()
+})
