@@ -1,6 +1,10 @@
+## refactor
+
 ## language
 
+- `default` shouldn't be accepted as identifier
 - unescape string literals
+- support single quoted strings?
 - support functions
 - support all forms of ES6 import
 - exclusive or combinator (oneOf)
@@ -10,21 +14,12 @@
 
 - set lifetime should be the same as transaction lifetime
 
-Wish list:
-- the user may import and provide sets as runtime parameters
-- a user provided set may be either a plain object or an ES6 Set
-- a failed test shouldn't modify a user defined set
-
 ## modules
 
-- import: use .jsondl extension with extensionless file names
 - mutual dependency between modules
+- custom module resolver can be passed on Loader construction
 - handle export-import cycles (https://github.com/webpack/webpack/issues/1788)
 - function for setting default options
-
-## contexts
-
-- assign source location to diagnostic messages
 
 ## compiler
 
@@ -48,6 +43,7 @@ Wish list:
 ## diagnostics
 
 - proper diagnostic messages from the parser (using ohm internals)
+- assign source location to diagnostic messages
 - validation diagnostics should be transactional
 - custom error formatter (the user may want error messages that refer to the 
   validated data but not to jsondl)
@@ -66,10 +62,16 @@ Wish list:
 ## perspectives
 
 - strict mode (ban extra properties and array elements)
+- use .d.ts files as declarations
 - array sections [ ] :: [ ]
 - setting default value for absent properties
 - arithmetic expressions and constraints
 - compilation to javascript
+
+set wish list:
+- the user may import and provide sets as runtime parameters
+- a user provided set may be either a plain object or an ES6 Set
+- a failed test shouldn't modify a user defined set
 
 ## docs
 
