@@ -74,4 +74,7 @@ test('import js', t => {
   t.done()
 })
 
-// todo: automatic extension
+test('import default', t => {
+  t.match(compile('import def from "./module/default-export"; def').test('default-export'), true)
+  t.done()
+})

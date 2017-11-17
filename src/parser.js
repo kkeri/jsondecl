@@ -44,7 +44,7 @@ const modelActions = {
 
   // import
 
-  ImportDeclaration_list (_imp_, items, _from_, moduleSpec, term) {
+  ImportDeclaration (_imp_, items, _from_, moduleSpec, term) {
     return new model.Import(moduleSpec.model(), items.model())
   },
   NamedImports_empty (_lbr_, _rbr_) {
@@ -58,6 +58,9 @@ const modelActions = {
   },
   ImportSpecifier_rename (origId, _as_, localId) {
     return new model.ImportSpecifier(origId.model(), localId.model())
+  },
+  ImportedDefaultBinding (id) {
+    return [new model.ImportSpecifier('default', id.model())]
   },
 
   // export

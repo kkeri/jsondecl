@@ -10,11 +10,11 @@ JSONDL {
 		| ExportDeclaration
 		| ConstDeclaration
 
-	ImportDeclaration =
-		| "import" ImportClause "from" string #term -- list
+	ImportDeclaration = "import" ImportClause "from" string #term
 
 	ImportClause =
 		| NamedImports
+		| ImportedDefaultBinding
 
 	NamedImports =
 		| "{" "}" -- empty
@@ -23,6 +23,8 @@ JSONDL {
 	ImportSpecifier =
 		| identifier "as" identifier -- rename
 		| identifier -- simple
+
+	ImportedDefaultBinding = identifier
 
 	ExportDeclaration =
 		| "export" ConstDeclaration -- const

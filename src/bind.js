@@ -62,6 +62,7 @@ class BindContext {
       if (this.defaultExport) {
         this.diag.error(`duplicate default export`, node)
       } else {
+        this.exports['default'] = node
         this.defaultExport = node
       }
     }
