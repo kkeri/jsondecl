@@ -1,0 +1,2 @@
+export default "no-ext-jsondl"
+export const x = "no-ext"

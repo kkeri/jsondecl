@@ -14,7 +14,7 @@ export function importModule (loader, importNode, {
   try {
     modulePath = resolve.sync(importNode.moduleSpec, {
       basedir: resolvePath,
-      extensions: ['jsondl', 'js', 'json'],
+      extensions: ['.jsondl', '.js', '.json'],
       preserveSymlinks: false
     })
   } catch (e) {
@@ -25,9 +25,10 @@ export function importModule (loader, importNode, {
   }
   const ext = Path.extname(modulePath)
   switch (ext) {
+    case '':
     case '.json':
     case '.jsondl':
-      return loader.load(modulePath, { diag })
+      return loader.load(modulePath, { diag }).exports
     case '.js':
       try {
         return require(modulePath)

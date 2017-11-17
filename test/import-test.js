@@ -60,6 +60,13 @@ test('windows absolute path not found', t => {
   t.done()
 })
 
+test('import jsondl', t => {
+  t.match(compile('import { rgb } from "./module/colors.jsondl"; rgb').test('red'), true)
+  t.match(compile('import { rgb } from "./module/colors"; rgb').test('red'), true)
+  t.match(compile('import { x } from "./module/no-ext-jsondl"; x').test('no-ext'), true)
+  t.done()
+})
+
 test('import js', t => {
   t.match(compile('import { a } from "./module/test.js"; a').test(3), true)
   t.match(compile('import { regex } from "./module/test.js"; regex').test('reg'), true)
