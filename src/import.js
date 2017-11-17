@@ -3,13 +3,9 @@ import resolve from 'resolve'
 import * as model from './model'
 
 export function importModule (loader, importNode, {
-  resolvePath,
+  resolvePath = '',
   diag
 }) {
-  if (!resolvePath) {
-    diag.error(`import statement requires the 'resolvePath' option`, importNode)
-    return
-  }
   let modulePath
   try {
     modulePath = resolve.sync(importNode.moduleSpec, {
