@@ -7,7 +7,7 @@ const jsondl = require('../lib/index')
 function compile (str) {
   let messages = []
   return jsondl.compile(str, {
-    resolvePath: __dirname,
+    baseDir: __dirname,
     messages
   })
 }

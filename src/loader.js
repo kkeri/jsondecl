@@ -11,7 +11,7 @@ export class ModuleLoader {
 
   compile (str, {
     id = '',
-    resolvePath,
+    baseDir,
     messages,
     diag = new Diagnostics(messages)
   } = {}) {
@@ -20,7 +20,7 @@ export class ModuleLoader {
       if (!modul) return null
       modul.id = id
       if (id) this.cache[id] = modul
-      bindModule(modul, this, { diag, resolvePath })
+      bindModule(modul, this, { diag, baseDir })
       if (diag.hasError) return null
       return modul
     } catch (e) {
@@ -40,7 +40,7 @@ export class ModuleLoader {
       let src = fs.readFileSync(path, encoding)
       modul = this.compile(src, {
         id: path,
-        resolvePath: Path.dirname(path),
+        baseDir: Path.dirname(path),
         diag,
         messages
       })

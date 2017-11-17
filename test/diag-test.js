@@ -6,7 +6,7 @@ const model = require('../lib/model')
 
 function compile (str, messages) {
   return _compile(str, {
-    resolvePath: __dirname,
+    baseDir: __dirname,
     messages: messages
   })
 }

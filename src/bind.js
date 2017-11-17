@@ -21,11 +21,11 @@ function compileBuiltins (builtin) {
 class BindContext {
   constructor (loader, {
       diag,
-      resolvePath = ''
+      baseDir = ''
   } = {}) {
     this.loader = loader
     this.diag = diag
-    this.resolvePath = resolvePath
+    this.baseDir = baseDir
     this.exports = {}
     this.defaultExport = undefined
     this.exportCount = 0
@@ -88,7 +88,7 @@ const bindVisitor = {
   Import (node, bc) {
     const exports = importModule(bc.loader, node, {
       diag: bc.diag,
-      resolvePath: bc.resolvePath
+      baseDir: bc.baseDir
     })
     if (!exports) return
     for (let item of node.importList) {
@@ -173,9 +173,9 @@ const bindVisitor = {
 
 export function bindModule (modul, loader, {
   diag,
-  resolvePath = ''
+  baseDir = ''
 } = {}) {
-  const bc = new BindContext(loader, { diag, resolvePath })
+  const bc = new BindContext(loader, { diag, baseDir })
   bind(modul, bc)
   if (diag.hasError) return
   modul.exports = bc.exports

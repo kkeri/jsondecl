@@ -3,13 +3,13 @@ import resolve from 'resolve'
 import * as model from './model'
 
 export function importModule (loader, importNode, {
-  resolvePath = '',
+  baseDir = '',
   diag
 }) {
   let modulePath
   try {
     modulePath = resolve.sync(importNode.moduleSpec, {
-      basedir: resolvePath,
+      basedir: baseDir,
       extensions: ['.jsondl', '.js', '.json'],
       preserveSymlinks: false
     })

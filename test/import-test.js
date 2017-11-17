@@ -7,7 +7,7 @@ const model = require('../lib/model')
 function compile (str) {
   const messages = []
   return jsondl.compile(str, {
-    resolvePath: __dirname,
+    baseDir: __dirname,
     messages
   })
 }
@@ -15,7 +15,7 @@ function compile (str) {
 test('package not found', t => {
   const messages = []
   t.match(jsondl.compile('import { a } from "jsondl-non-existing-module-for-test"; 1', {
-    resolvePath: __dirname,
+    baseDir: __dirname,
     messages
   }), null)
   t.match(messages.length, 1)
@@ -27,7 +27,7 @@ test('package not found', t => {
 test('relative path not found', t => {
   const messages = []
   t.match(jsondl.compile('import { a } from "./module/nomodule.js"; 1', {
-    resolvePath: __dirname,
+    baseDir: __dirname,
     messages
   }), null)
   t.match(messages.length, 1)
@@ -39,7 +39,7 @@ test('relative path not found', t => {
 test('unix absolute path not found', t => {
   const messages = []
   t.match(jsondl.compile('import { a } from "/__no-such-topdir__/__no-such-subdir__/__no-such-file.js"; 1', {
-    resolvePath: __dirname,
+    baseDir: __dirname,
     messages
   }), null)
   t.match(messages.length, 1)
@@ -51,7 +51,7 @@ test('unix absolute path not found', t => {
 test('windows absolute path not found', t => {
   const messages = []
   t.match(jsondl.compile('import { a } from "X:\__no-such-topdir__\__no-such-subdir__\__no-such-file.js"; 1', {
-    resolvePath: __dirname,
+    baseDir: __dirname,
     messages
   }), null)
   t.match(messages.length, 1)
