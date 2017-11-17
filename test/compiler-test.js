@@ -168,50 +168,6 @@ test('const with comments', t => {
   t.done()
 })
 
-test('const with terminator', t => {
-  t.match(compile('export const a = 1;/**/'), {
-    exports: {
-      a: { body: { value: 1 } }
-    }
-  })
-  t.match(compile('export const a = 1;//'), {
-    exports: {
-      a: { body: { value: 1 } }
-    }
-  })
-  t.match(compile('export const a = 1/**/;'), {
-    exports: {
-      a: { body: { value: 1 } }
-    }
-  })
-  t.match(compile('export const a = 1/**/\r;'), {
-    exports: {
-      a: { body: { value: 1 } }
-    }
-  })
-  t.match(compile('export const a = 1//\r;'), {
-    exports: {
-      a: { body: { value: 1 } }
-    }
-  })
-  t.match(compile('export const a = 1\r;'), {
-    exports: {
-      a: { body: { value: 1 } }
-    }
-  })
-  t.match(compile('export const a = 1\r \n '), {
-    exports: {
-      a: { body: { value: 1 } }
-    }
-  })
-  t.done()
-})
-
-test('no export', t => {
-  t.match(compile('const a = 1'), null)
-  t.done()
-})
-
 test('object', t => {
   t.match(compile('{}'), {
     defaultExport: {
