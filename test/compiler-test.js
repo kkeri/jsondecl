@@ -62,6 +62,9 @@ test('identifier', t => {
 })
 
 test('const', t => {
+  t.match(compile('const default = 1'), null)
+  t.match(compile('const import = 1'), null)
+  t.match(compile('const as = 1'), null)
   t.match(compile('consta = 1'), null)
   t.match(compile('exportconst a = 1'), null)
   t.match(compile('export consta = 1'), null)

@@ -22,12 +22,12 @@ JSONDL {
 		| "{" NonemptyListOf<ImportSpecifier, ","> ","? "}" -- list
 
 	ImportSpecifier =
-		| identifier as identifier -- rename
-		| identifier -- simple
+		| identifier as BindingIdentifier -- rename
+		| BindingIdentifier -- simple
 
-	ImportedDefaultBinding = identifier
+	ImportedDefaultBinding = BindingIdentifier
 
-	NameSpaceImport = "*" as identifier
+	NameSpaceImport = "*" as BindingIdentifier
 
 	ExportDeclaration =
 		| export ConstDeclaration -- const
@@ -38,7 +38,7 @@ JSONDL {
 
 	DeclarationList = NonemptyListOf<DeclarationListItem, ",">
 
-	DeclarationListItem = identifier "=" Expression
+	DeclarationListItem = BindingIdentifier "=" Expression
 
 	// expressions
 
@@ -104,9 +104,13 @@ JSONDL {
 		| "{" natural "," "}" -- min
 		| "{" natural "," natural "}" -- range
 
+	BindingIdentifier = ~keyword identifier
+
 	DeclarationKeyword = import | export | const
 
 	// keywords
+
+	keyword = as | const | default | export | from | import | in | let | set
 
 	as = "as" ~identifierPart
 	const = "const" ~identifierPart
