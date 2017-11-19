@@ -12,12 +12,12 @@ function compile (str) {
   })
 }
 
-// test('export syntax error', t => {
-//   t.match(compile('exportdefault 1'), null)
-//   t.match(compile('exportconst a = 1'), null)
-//   t.match(compile('export default1'), null)
-//   t.done()
-// })
+test('export syntax error', t => {
+  t.match(compile('exportdefault 1'), null)
+  t.match(compile('exportconst a = 1'), null)
+  t.match(compile('export default1'), null)
+  t.done()
+})
 
 test('default export', t => {
   t.match(compile('1').test(1), true)

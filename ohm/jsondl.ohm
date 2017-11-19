@@ -10,7 +10,7 @@ JSONDL {
 		| ExportDeclaration
 		| ConstDeclaration
 
-	ImportDeclaration = "import" ImportClause "from" string #term
+	ImportDeclaration = import ImportClause from string #term
 
 	ImportClause =
 		| NamedImports
@@ -22,19 +22,19 @@ JSONDL {
 		| "{" NonemptyListOf<ImportSpecifier, ","> ","? "}" -- list
 
 	ImportSpecifier =
-		| identifier "as" identifier -- rename
+		| identifier as identifier -- rename
 		| identifier -- simple
 
 	ImportedDefaultBinding = identifier
 
-	NameSpaceImport = "*" "as" identifier
+	NameSpaceImport = "*" as identifier
 
 	ExportDeclaration =
-		| "export" ConstDeclaration -- const
-		| "export" "default" Expression #term -- default
+		| export ConstDeclaration -- const
+		| export default Expression #term -- default
 		| ~DeclarationKeyword Expression #term -- bare
 
-	ConstDeclaration = "const" DeclarationListItem #term
+	ConstDeclaration = const DeclarationListItem #term
 
 	DeclarationList = NonemptyListOf<DeclarationListItem, ",">
 
@@ -44,7 +44,7 @@ JSONDL {
 
 	Expression = LetIn | OrPattern
 
-	LetIn = "let" DeclarationList "in" Expression
+	LetIn = let DeclarationList in Expression
 
 	OrPattern = NonemptyListOf<AndPattern, "|">
 
@@ -70,7 +70,7 @@ JSONDL {
 
 	Grouping = "(" Expression ")"
 
-	SetConstructor = "set"
+	SetConstructor = set
 
 	Call = Primary "(" ListOf<Expression, ","> ")"
 
@@ -104,7 +104,19 @@ JSONDL {
 		| "{" natural "," "}" -- min
 		| "{" natural "," natural "}" -- range
 
-	DeclarationKeyword = "import" | "export" | "const"
+	DeclarationKeyword = import | export | const
+
+	// keywords
+
+	as = "as" ~identifierPart
+	const = "const" ~identifierPart
+	default = "default" ~identifierPart
+	export = "export" ~identifierPart
+	from = "from" ~identifierPart
+	import = "import" ~identifierPart
+	in = "in" ~identifierPart
+	let = "let" ~identifierPart
+	set = "set" ~identifierPart
 
 	// lexical rules
 
@@ -151,9 +163,9 @@ JSONDL {
 	regexpFlags = ("A".."Z" | "a".."z")*
 
 	constant =
-		| "this" -- this
-		| "null" -- null
-		| "true" -- true
-		| "false" -- false
+		| "this" ~identifierPart -- this
+		| "null" ~identifierPart -- null
+		| "true" ~identifierPart -- true
+		| "false" ~identifierPart -- false
 }
 

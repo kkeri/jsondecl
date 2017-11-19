@@ -62,6 +62,9 @@ test('identifier', t => {
 })
 
 test('const', t => {
+  t.match(compile('consta = 1'), null)
+  t.match(compile('exportconst a = 1'), null)
+  t.match(compile('export consta = 1'), null)
   t.match(compile('export const a = 1'), {
     env: {
       a: { body: { value: 1 } }

@@ -12,6 +12,15 @@ function compile (str) {
   })
 }
 
+test('import syntax error', t => {
+  t.match(compile('importrgb from "./module/colors.jsondl"; rgb'), null)
+  t.match(compile('import rgbfrom "./module/colors.jsondl"; rgb'), null)
+  t.match(compile('import * asall from "./module/colors.jsondl"; rgb'), null)
+  t.match(compile('import { aas b } from "./module/colors.jsondl"; rgb'), null)
+  t.match(compile('import { a asb } from "./module/colors.jsondl"; rgb'), null)
+  t.done()
+})
+
 test('package not found', t => {
   const messages = []
   t.match(jsondl.compile('import { a } from "jsondl-non-existing-module-for-test"; 1', {
