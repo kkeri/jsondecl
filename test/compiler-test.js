@@ -77,6 +77,15 @@ test('const', t => {
     },
     defaultExport: null
   })
+  t.match(compile('export const $a = 1'), {
+    env: {
+      $a: { body: { value: 1 } }
+    },
+    exports: {
+      $a: { body: { value: 1 } }
+    },
+    defaultExport: null
+  })
   t.match(compile('export const a = 1; 2'), {
     env: {
       a: { body: { value: 1 } }

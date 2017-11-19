@@ -136,7 +136,7 @@ JSONDL {
 		| spaceInline* ("\r" | "\n" | end)
 
 	identifier (an indentifier) = identifierStart identifierPart*
-	identifierStart = "A".."Z" | "a".."z" | "_"
+	identifierStart = "A".."Z" | "a".."z" | "_" | "$"
 	identifierPart = identifierStart | digit
 
 	number (a number) = "-"? natural ("." fractionalPart)? exponentPart?
