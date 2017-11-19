@@ -1,14 +1,16 @@
 ## refactor
 
+- rename originalName to importName
+
 ## language
 
-- `default` shouldn't be accepted as identifier
 - unescape string literals
-- support single quoted strings?
 - support functions
 - support all forms of ES6 import
 - exclusive or combinator (oneOf)
-- varify that the JSONDL is superset of JSON (character set compatibility!)
+- support single quoted strings?
+- support full set of ES6 identifiers?
+- verify that JSONDL is superset of JSON (character set compatibility!)
 
 ## sets
 
@@ -27,7 +29,7 @@
 - warning: cardinality defined on empty array pattern
 - handle error location
 - static evaluation as compilation and optimization technique
-- dynamic cardinality
+- dynamic cardinality?
 
 ## optimization
 
@@ -37,6 +39,7 @@
 ## runtime
 
 - distinguish runtime errors from validation errors (runtime errors must throw)
+  - e.g. fallback methods in Expression
 - assign stack trace to runtime errors
 - env object without standard prototype
 
