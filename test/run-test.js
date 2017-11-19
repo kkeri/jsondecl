@@ -97,6 +97,14 @@ test('not', t => {
   t.done()
 })
 
+test('override builtins', t => {
+  t.match(compile('const any = 1; any').test(0), false)
+  t.match(compile('const any = 1; any').test(1), true)
+  t.match(compile('const unique = 1; unique').test(0), false)
+  t.match(compile('const unique = 1; unique').test(1), true)
+  t.done()
+})
+
 test('grouping', t => {
   t.match(compile('(1)').test(1), true)
   t.match(compile('!(1|2)').test(1), false)
