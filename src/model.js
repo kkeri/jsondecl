@@ -69,7 +69,7 @@ export class Const {
   }
 
   test (rc, value) {
-    return this.expr.test(rc, value)
+    return this.body.test(rc, value)
   }
 }
 
