@@ -15,6 +15,7 @@ JSONDL {
 	ImportClause =
 		| NamedImports
 		| ImportedDefaultBinding
+		| NameSpaceImport
 
 	NamedImports =
 		| "{" "}" -- empty
@@ -25,6 +26,8 @@ JSONDL {
 		| identifier -- simple
 
 	ImportedDefaultBinding = identifier
+
+	NameSpaceImport = "*" "as" identifier
 
 	ExportDeclaration =
 		| "export" ConstDeclaration -- const

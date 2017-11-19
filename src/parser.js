@@ -62,6 +62,9 @@ const modelActions = {
   ImportedDefaultBinding (id) {
     return [new model.ImportSpecifier('default', id.model())]
   },
+  NameSpaceImport (_star_, _as_, id) {
+    return [new model.ImportSpecifier('*', id.model())]
+  },
 
   // export
 

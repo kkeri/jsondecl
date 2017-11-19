@@ -396,6 +396,14 @@ export class Literal extends Expression {
     this.value = value
   }
 
+  getChild (rc, id) {
+    if (id in this.value) {
+      return this.value[id]
+    } else {
+      return super.getChild(rc, id)
+    }
+  }
+
   getNativeValue (rc) {
     return this.value
   }

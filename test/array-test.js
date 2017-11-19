@@ -4,7 +4,8 @@ const test = require('tap').test
 const jsondl = require('../lib/index')
 
 function compile (str) {
-  return jsondl.compile(str)
+  const messages = []
+  return jsondl.compile(str, { messages })
 }
 
 test('array', t => {

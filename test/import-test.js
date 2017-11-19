@@ -74,8 +74,15 @@ test('import js', t => {
   t.done()
 })
 
-test('import default', t => {
-  t.match(compile('import def from "./module/default-export"; def').test('default-export'), true)
+test('import default binding', t => {
+  t.match(compile('import def from "./module/exports"; def').test('default-export'), true)
+  t.done()
+})
+
+test('namespace import', t => {
+  t.match(compile('import * as all from "./module/exports"; all.default').test('default-export'), true)
+  t.match(compile('import * as all from "./module/exports"; all.a').test(1), true)
+  t.match(compile('import * as all from "./module/exports"; all.b').test(2), true)
   t.done()
 })
 

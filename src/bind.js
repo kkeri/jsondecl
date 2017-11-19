@@ -93,7 +93,9 @@ const bindVisitor = {
     })
     if (!exports) return
     for (let item of node.importList) {
-      if (item.originalId in exports) {
+      if (item.originalId === '*') {
+        bc.bind(item.localId, new model.Literal(exports))
+      } else if (item.originalId in exports) {
         const value = importValue(exports[item.originalId], {
           originalId: item.originalId,
           moduleSpec: node.moduleSpec,
