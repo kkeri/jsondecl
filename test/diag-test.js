@@ -3,6 +3,7 @@
 const test = require('tap').test
 const _compile = require('../lib/index').compile
 const model = require('../lib/model')
+const RuntimeError = require('../lib/diag').RuntimeError
 
 function compile (str, messages) {
   return _compile(str, {
@@ -51,5 +52,43 @@ test('mixed', t => {
   t.match(messages[0].severity, 'info')
   t.match(messages[1].severity, 'warning')
   t.match(messages[2].severity, 'error')
+  t.done()
+})
+
+test('illegal use of expression as pattern', t => {
+  t.throws(function () { compile('set').test(1) }, RuntimeError)
+
+  t.done()
+})
+
+test('illegal call', t => {
+  t.throws(function () {
+    compile('const x = 1; x()').test(1) 
+  }, RuntimeError)
+
+  t.done()
+})
+
+test('illegal property ref', t => {
+  t.throws(function () {
+    compile('const x = 1; x.a').test(1) 
+  }, RuntimeError)
+
+  t.done()
+})
+
+test('illegal argument to native pattern', t => {
+  t.throws(function () {
+    compile('lt({})').test(1) 
+  }, RuntimeError)
+
+  t.done()
+})
+
+test('illegal reference', t => {
+  t.throws(function () {
+    compile('a').test(1) 
+  }, RuntimeError)
+
   t.done()
 })
