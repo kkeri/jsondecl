@@ -50,7 +50,7 @@ export class Const {
   eval (rc) {
     if (!('value' in this)) {
       if (this.busy) {
-        throw new RuntimeError('CIRCULAR-REF', this, 'Circular reference detected')
+        throw new RuntimeError('Circular reference detected', this, 'CIRCULAR-REF')
       }
       this.busy = true
       try {
@@ -88,23 +88,23 @@ export class Expression {
   }
 
   test (rc, value) {
-    throw new RuntimeError('PATTERN_EXPECTED', this,
-      `${this.getName()} can't be used as pattern`)
+    throw new RuntimeError(`${this.getName()} can't be used as pattern`,
+      this, 'PATTERN_EXPECTED')
   }
 
   call (rc, args) {
-    throw new RuntimeError('NOT_CALLABLE', this,
-      `${this.getName()} can't be called`)
+    throw new RuntimeError(`${this.getName()} can't be called`,
+      this, 'NOT_CALLABLE')
   }
 
   getChild (rc, id) {
-    throw new RuntimeError('PROPERTY_NOT_FOUND', this,
-      `property ${id} is not found on ${this.getName()}`)
+    throw new RuntimeError(`property ${id} is not found on ${this.getName()}`,
+      this, 'PROPERTY_NOT_FOUND')
   }
 
   getNativeValue (rc) {
-    throw new RuntimeError('NO_NATIVE_VALUE', this,
-      `${this.getName()} can't be passed to a native pattern`)
+    throw new RuntimeError(`${this.getName()} can't be passed to a native pattern`,
+      this, 'NO_NATIVE_VALUE')
   }
 
   getName () {
@@ -205,7 +205,8 @@ export class Reference extends Expression {
   eval (rc) {
     const target = rc.env[this.id]
     if (!target) {
-      throw new RuntimeError('UNDEFINED-ID', this, `undefined identifier '${this.id}'`)
+      throw new RuntimeError(`undefined identifier '${this.id}'`,
+        this, 'UNDEFINED-ID')
     }
     return target.eval(rc)
   }

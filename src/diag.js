@@ -1,6 +1,6 @@
 
 export class RuntimeError {
-  constructor (code, ref, msg) {
+  constructor (msg, ref, code) {
     this.code = code
     this.ref = ref
     this.message = msg

@@ -28,7 +28,8 @@ export const ge = (x, y) => number(x) && number(y) && x >= y
 class ClosedFunction extends Expression {
   call (rc, [pattern]) {
     if (!pattern) {
-      throw new RuntimeError('PATTERN_EXPECTED', this, `pattern argument expected by 'closed'`)
+      throw new RuntimeError(`pattern argument expected by 'closed'`,
+        this, 'PATTERN_EXPECTED')
     }
     return new ClosedPattern(pattern)
   }
