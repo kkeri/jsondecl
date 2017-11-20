@@ -19,9 +19,8 @@
 ## modules
 
 - mutual dependency between modules
-- custom module resolver can be passed on Loader construction
 - handle export-import cycles (https://github.com/webpack/webpack/issues/1788)
-- function for setting default options
+- custom module resolver can be passed on Loader construction
 
 ## compiler
 
@@ -39,7 +38,6 @@
 ## runtime
 
 - assign stack trace to runtime errors
-- env object without standard prototype
 
 ## diagnostics
 

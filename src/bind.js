@@ -7,7 +7,7 @@ const builtins = compileBuiltins(builtin)
 
 function compileBuiltins (builtin) {
   const diag = new Diagnostics()
-  let decls = {}
+  let decls = Object.create(null)
   for (let b in builtin) {
     decls[b] = importValue(builtin[b], {
       originalId: b,
@@ -47,7 +47,7 @@ class BindContext {
   }
 
   bind (id, value, node) {
-    if (this.env.hasOwnProperty(id)) {
+    if (Object.prototype.hasOwnProperty.call(this.env, id)) {
       this.diag.error(`${id}: duplicate identifier`, node)
     } else {
       this.env[id] = value

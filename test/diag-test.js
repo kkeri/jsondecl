@@ -92,3 +92,11 @@ test('illegal reference', t => {
 
   t.done()
 })
+
+test('no standard object prototype', t => {
+  t.throws(function () {
+    compile('toString').test(1) 
+  }, RuntimeError)
+
+  t.done()
+})

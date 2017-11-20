@@ -6,7 +6,10 @@ const jsondl = require('../lib/index')
 const RuntimeError = require('../lib/diag').RuntimeError
 
 function compile (str) {
-  return jsondl.compile(str)
+  const messages = []
+  return jsondl.compile(str, {
+    messages
+  })
 }
 
 test('on-demand', t => {
