@@ -1,6 +1,7 @@
 import { TransactionalMap } from './map'
 import { Expression } from './model'
 import { arrayToJsonPath } from './util'
+import { RuntimeError } from './diag'
 
 export const any = (x) => true
 
@@ -27,8 +28,7 @@ export const ge = (x, y) => number(x) && number(y) && x >= y
 class ClosedFunction extends Expression {
   call (rc, [pattern]) {
     if (!pattern) {
-      rc.diag.error(`closed requires a pattern argument`)
-      return new Expression()
+      throw new RuntimeError('PATTERN_EXPECTED', this, `pattern argument expected by 'closed'`)
     }
     return new ClosedPattern(pattern)
   }

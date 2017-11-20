@@ -57,6 +57,7 @@ export class Const {
         this.value = this.body.eval(rc)
       } catch (e) {
         if (e instanceof RuntimeError && e.code === 'CIRCULAR-REF' && e.ref) {
+          // todo: remove this when stack traces are implemented
           rc.diag.error(`circular reference detected while evaluating const '${this.id}'`)
           if (e.ref === this) e.ref = null
         }
@@ -87,23 +88,27 @@ export class Expression {
   }
 
   test (rc, value) {
-    rc.diag.error(`the expression can't be used as pattern`)
-    return false
+    throw new RuntimeError('PATTERN_EXPECTED', this,
+      `${this.getName()} can't be used as pattern`)
   }
 
   call (rc, args) {
-    rc.diag.error(`the expression can't be called`)
-    return this
+    throw new RuntimeError('NOT_CALLABLE', this,
+      `${this.getName()} can't be called`)
   }
 
   getChild (rc, id) {
-    rc.diag.error(`property ${id} is not found`)
-    return this
+    throw new RuntimeError('PROPERTY_NOT_FOUND', this,
+      `property ${id} is not found on ${this.getName()}`)
   }
 
   getNativeValue (rc) {
-    rc.diag.error(`the expression can't be passed to a native pattern`)
-    return null
+    throw new RuntimeError('NO_NATIVE_VALUE', this,
+      `${this.getName()} can't be passed to a native pattern`)
+  }
+
+  getName () {
+    return this.alias || (this.constructor && this.constructor.name) || 'expression'
   }
 }
 

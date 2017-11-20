@@ -3,6 +3,7 @@
 const test = require('tap').test
 const _compile = require('../lib/index').compile
 const model = require('../lib/model')
+const RuntimeError = require('../lib/diag').RuntimeError
 
 function compile (str) {
   return _compile(str, {
@@ -210,7 +211,7 @@ test('closed object', t => {
 })
 
 test('closed expression', t => {
-  t.match(compile('closed()').test({}), false)
+  t.throws(function () { compile('closed()').test({}) }, RuntimeError)
 
   t.match(compile('closed(1)').test({}), false)
   t.match(compile('closed(1)').test(1), true)

@@ -1,4 +1,5 @@
 import { ModuleLoader } from './loader'
+export { RuntimeError, Diagnostics } from './diag'
 
 const defaultLoader = new ModuleLoader()
 

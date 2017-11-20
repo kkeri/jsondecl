@@ -38,8 +38,6 @@
 
 ## runtime
 
-- distinguish runtime errors from validation errors (runtime errors must throw)
-  - e.g. fallback methods in Expression
 - assign stack trace to runtime errors
 - env object without standard prototype
 
@@ -53,6 +51,7 @@
 
 ## native extensions
 
+- pass rc as a parameter instead of this
 - exception handling when calling native extensions
 - implement errorlevel (warn)
 - emit diagnostic messages from built in extensions
