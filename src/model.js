@@ -47,46 +47,11 @@ export class ConstDeclaration {
     this.id = id
     this.body = body
   }
-
-  eval (rc) {
-    if (!('value' in this)) {
-      if (this.busy) {
-        throw new RuntimeError('Circular reference detected', this, 'CIRCULAR_REF')
-      }
-      this.busy = true
-      const savedEnv = rc.env
-      try {
-        if (this.env) rc.env = this.env
-        this.value = this.body.eval(rc)
-      } catch (e) {
-        if (e instanceof RuntimeError && e.code === 'CIRCULAR_REF' && e.ref) {
-          // todo: remove this when stack traces are implemented
-          rc.diag.error(`circular reference detected while evaluating const '${this.id}'`)
-          if (e.ref === this) e.ref = null
-        }
-        throw e
-      } finally {
-        this.busy = false
-        rc.env = savedEnv
-      }
-    }
-    return this.value
-  }
-
-  test (rc, value) {
-    return this.body.test(rc, value)
-  }
 }
 
 // expression
 
 export class Expression {
-  // constructor () {
-  //   if (new.target === Expression) {
-  //     throw new Error(`can't instantiate abstract class`)
-  //   }
-  // }
-
   eval (rc) {
     return this
   }
@@ -130,6 +95,44 @@ export class ImportExpression extends Expression {
       `'${this.targetName}'`, this, 'NOT_EXPORTED')
     }
     return importValue(this.exports[this.exportId]).eval(rc)
+  }
+}
+
+export class DeclarationExpression extends Expression {
+  constructor (id, expr, env) {
+    super()
+    this.id = id
+    this.expr = expr
+    this.env = env
+  }
+
+  eval (rc) {
+    if (!('value' in this)) {
+      if (this.busy) {
+        throw new RuntimeError('Circular reference detected', this, 'CIRCULAR_REF')
+      }
+      this.busy = true
+      const savedEnv = rc.env
+      try {
+        if (this.env) rc.env = this.env
+        this.value = this.expr.eval(rc)
+      } catch (e) {
+        if (e instanceof RuntimeError && e.code === 'CIRCULAR_REF' && e.ref) {
+          // todo: remove this when stack traces are implemented
+          rc.diag.error(`circular reference detected while evaluating '${this.id}'`)
+          if (e.ref === this) e.ref = null
+        }
+        throw e
+      } finally {
+        this.busy = false
+        rc.env = savedEnv
+      }
+    }
+    return this.value
+  }
+
+  test (rc, value) {
+    return this.eval(rc).test(rc, value)
   }
 }
 

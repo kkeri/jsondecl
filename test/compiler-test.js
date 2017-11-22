@@ -70,45 +70,45 @@ test('const', t => {
   t.match(compile('export consta = 1'), null)
   t.match(compile('export const a = 1'), {
     env: {
-      a: { body: { value: 1 } }
+      a: { expr: { value: 1 } }
     },
     exports: {
-      a: { body: { value: 1 } }
+      a: { expr: { value: 1 } }
     },
     defaultExport: null
   })
   t.match(compile('export const $a = 1'), {
     env: {
-      $a: { body: { value: 1 } }
+      $a: { expr: { value: 1 } }
     },
     exports: {
-      $a: { body: { value: 1 } }
+      $a: { expr: { value: 1 } }
     },
     defaultExport: null
   })
   t.match(compile('export const a = 1; 2'), {
     env: {
-      a: { body: { value: 1 } }
+      a: { expr: { value: 1 } }
     },
     exports: {
-      a: { body: { value: 1 } }
+      a: { expr: { value: 1 } }
     },
     defaultExport: { value: 2 }
   })
   t.match(compile('const a = 1; const a = 2'), null)
   t.match(compile('export const a = 1; const b = 2'), {
     env: {
-      a: { body: { value: 1 } },
-      b: { body: { value: 2 } }
+      a: { expr: { value: 1 } },
+      b: { expr: { value: 2 } }
     },
     exports: {
-      a: { body: { value: 1 } }
+      a: { expr: { value: 1 } }
     },
     defaultExport: null
   })
   t.match(compile('export const a = 1 | 2'), {
     env: {
-      a: { body:
+      a: { expr:
       {
         items: [
             { value: 1 },
@@ -124,17 +124,17 @@ test('const', t => {
 test('const with comments', t => {
   t.match(compile('/**/export/**/const/**/a/**/=/**/1/**/'), {
     exports: {
-      a: { body: { value: 1 } }
+      a: { expr: { value: 1 } }
     }
   })
   t.match(compile('//\rexport//\rconst//\ra//\r=//\r1//\r'), {
     exports: {
-      a: { body: { value: 1 } }
+      a: { expr: { value: 1 } }
     }
   })
   t.match(compile('export const a = 1;/**/\t //'), {
     exports: {
-      a: { body: { value: 1 } }
+      a: { expr: { value: 1 } }
     }
   })
   t.done()
@@ -231,7 +231,7 @@ test('let...in', t => {
   t.match(compile('let a = 1 in a'), {
     defaultExport: {
       env: {
-        a: { body: { value: 1 } }
+        a: { expr: { value: 1 } }
       },
       body: { id: 'a' }
     }
@@ -239,7 +239,7 @@ test('let...in', t => {
   t.match(compile('const x = 1; let a = x in a'), {
     defaultExport: {
       env: {
-        a: { body: { id: 'x' } }
+        a: { expr: { id: 'x' } }
       },
       body: { id: 'a' }
     }
@@ -247,7 +247,7 @@ test('let...in', t => {
   t.match(compile('export default let a = x in a; const x = 1'), {
     defaultExport: {
       env: {
-        a: { body: { id: 'x' } }
+        a: { expr: { id: 'x' } }
       },
       body: { id: 'a' }
     }

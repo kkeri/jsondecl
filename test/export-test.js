@@ -45,37 +45,37 @@ test('exported const is available in module', t => {
 test('const with terminator', t => {
   t.match(compile('export const a = 1;/**/'), {
     exports: {
-      a: { body: { value: 1 } }
+      a: { expr: { value: 1 } }
     }
   })
   t.match(compile('export const a = 1;//'), {
     exports: {
-      a: { body: { value: 1 } }
+      a: { expr: { value: 1 } }
     }
   })
   t.match(compile('export const a = 1/**/;'), {
     exports: {
-      a: { body: { value: 1 } }
+      a: { expr: { value: 1 } }
     }
   })
   t.match(compile('export const a = 1/**/\r;'), {
     exports: {
-      a: { body: { value: 1 } }
+      a: { expr: { value: 1 } }
     }
   })
   t.match(compile('export const a = 1//\r;'), {
     exports: {
-      a: { body: { value: 1 } }
+      a: { expr: { value: 1 } }
     }
   })
   t.match(compile('export const a = 1\r;'), {
     exports: {
-      a: { body: { value: 1 } }
+      a: { expr: { value: 1 } }
     }
   })
   t.match(compile('export const a = 1\r \n '), {
     exports: {
-      a: { body: { value: 1 } }
+      a: { expr: { value: 1 } }
     }
   })
   t.done()

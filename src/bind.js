@@ -99,18 +99,19 @@ const bindVisitor = {
   },
 
   ExportDeclaration (node, bc) {
+    bind(node.body, bc)
     if (node.body instanceof model.ConstDeclaration) {
-      bc.export(node.body, node.body.id)
+      bc.export(node.body.expr, node.body.id)
     } else {
       bc.export(node.body)
     }
-    bind(node.body, bc)
   },
 
   ConstDeclaration (node, bc) {
-    if (bc.dynamicDepth === 0) node.env = bc.env
-    bc.bind(node.id, node)
     bind(node.body, bc)
+    const env = bc.dynamicDepth ? undefined : bc.env
+    node.expr = new model.DeclarationExpression(node.id, node.body, env)
+    bc.bind(node.id, node.expr)
   },
 
   LocalEnvironment (node, bc) {

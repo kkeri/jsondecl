@@ -47,12 +47,12 @@ export function importValue (value) {
     case 'function':
       return new model.NativePattern(value)
     case 'object':
-      if (value instanceof RegExp) {
-        return model.RegExp_.fromRegExp(value)
-      } else if (Array.isArray(value)) {
-        return new model.Literal(value)
-      } else {
+      if (value instanceof model.Expression) {
         return value
+      } else if (value instanceof RegExp) {
+        return model.RegExp_.fromRegExp(value)
+      } else {
+        return new model.Literal(value)
       }
     default:
       return new model.Literal(value)

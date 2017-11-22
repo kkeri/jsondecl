@@ -12,14 +12,12 @@
 
 ## model
 
+- clarify evaluation strategy of strict compound objects (no eval in test)
 - verify that this can't be used as pattern
 - set lifetime should be the same as transaction lifetime
 
 ## modules
 
-- Module.DefaultExport is obsolete
-- import only Expression instance objects without boxing
-  - introduce Thunk for ConstDeclaration just like ImportExpression for imports
 - handle export-import cycles (https://github.com/webpack/webpack/issues/1788)
 - custom module resolver can be passed on Loader construction
 
