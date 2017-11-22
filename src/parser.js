@@ -72,10 +72,10 @@ const modelActions = {
     return new model.ExportDeclaration(_const_.model())
   },
   ExportDeclaration_default (_exp_, _def_, expr, term) {
-    return new model.ExportDeclaration(expr.model())
+    return new model.ExportDeclaration(new model.ConstDeclaration('default', expr.model()))
   },
   ExportDeclaration_bare (expr, term) {
-    return new model.ExportDeclaration(expr.model())
+    return new model.ExportDeclaration(new model.ConstDeclaration('default', expr.model()))
   },
 
   // const

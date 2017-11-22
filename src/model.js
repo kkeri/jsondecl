@@ -7,17 +7,16 @@ export class Module {
   constructor (declList) {
     this.declList = declList
     this.exports = {}
-    this.defaultExport = undefined
   }
 
   test (value, {
     messages,
     runtime = new RuntimeContext(this.env, { messages })
   } = {}) {
-    if (!this.defaultExport) {
+    if (!this.exports.default) {
       throw new Error(`attempt to validate against the default export but it doesn't exist`)
     }
-    let result = this.defaultExport.eval(runtime).test(runtime, value)
+    let result = this.exports.default.eval(runtime).test(runtime, value)
     return result && !runtime.diag.hasError
   }
 }

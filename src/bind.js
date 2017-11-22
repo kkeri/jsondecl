@@ -42,25 +42,20 @@ class BindContext {
     this.env = Object.getPrototypeOf(this.env)
   }
 
-  bind (id, value, node) {
+  bind (id, node) {
     if (Object.prototype.hasOwnProperty.call(this.env, id)) {
       this.diag.error(`${id}: duplicate identifier`, node)
     } else {
-      this.env[id] = value
+      this.env[id] = node
     }
   }
 
-  export (node, id) {
-    this.exportCount++
-    if (id) {
-      this.modul.exports[id] = node
+  export (id, node) {
+    if (this.modul.exports[id]) {
+      this.diag.error(`duplicate export '${id}'`, node)
     } else {
-      if (this.modul.defaultExport) {
-        this.diag.error(`duplicate default export`, node)
-      } else {
-        this.modul.exports['default'] = node
-        this.modul.defaultExport = node
-      }
+      this.modul.exports[id] = node
+      this.exportCount++
     }
   }
 }
@@ -100,18 +95,14 @@ const bindVisitor = {
 
   ExportDeclaration (node, bc) {
     bind(node.body, bc)
-    if (node.body instanceof model.ConstDeclaration) {
-      bc.export(node.body.expr, node.body.id)
-    } else {
-      bc.export(node.body)
-    }
+    bc.export(node.body.id, node.body.expr)
   },
 
   ConstDeclaration (node, bc) {
     bind(node.body, bc)
     const env = bc.dynamicDepth ? undefined : bc.env
     node.expr = new model.DeclarationExpression(node.id, node.body, env)
-    bc.bind(node.id, node.expr)
+    if (node.id !== 'default') bc.bind(node.id, node.expr)
   },
 
   LocalEnvironment (node, bc) {

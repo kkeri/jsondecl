@@ -14,28 +14,28 @@ function compile (str) {
 
 test('simple value', t => {
   t.match(compile('1'), {
-    defaultExport: {
-      value: 1
+    exports: {
+      default: { expr: { value: 1 } }
     }
   })
   t.match(compile('"a"'), {
-    defaultExport: {
-      value: 'a'
+    exports: {
+      default: { expr: { value: 'a' } }
     }
   })
   t.match(compile('true'), {
-    defaultExport: {
-      value: true
+    exports: {
+      default: { expr: { value: true } }
     }
   })
   t.match(compile('false'), {
-    defaultExport: {
-      value: false
+    exports: {
+      default: { expr: { value: false } }
     }
   })
   t.match(compile('null'), {
-    defaultExport: {
-      value: null
+    exports: {
+      default: { expr: { value: null } }
     }
   })
   t.done()
@@ -56,7 +56,9 @@ test('regex', t => {
 test('identifier', t => {
   // t.match(compile('a'), null) <- no runtime check at the time
   t.match(compile('const a = 1; a'), {
-    defaultExport: { id: 'a' }
+    exports: {
+      default: { expr: { id: 'a'  } }
+    }
   })
   t.done()
 })
@@ -74,8 +76,7 @@ test('const', t => {
     },
     exports: {
       a: { expr: { value: 1 } }
-    },
-    defaultExport: null
+    }
   })
   t.match(compile('export const $a = 1'), {
     env: {
@@ -83,17 +84,16 @@ test('const', t => {
     },
     exports: {
       $a: { expr: { value: 1 } }
-    },
-    defaultExport: null
+    }
   })
   t.match(compile('export const a = 1; 2'), {
     env: {
       a: { expr: { value: 1 } }
     },
     exports: {
+      default: { expr: { value: 2 } },
       a: { expr: { value: 1 } }
-    },
-    defaultExport: { value: 2 }
+    }
   })
   t.match(compile('const a = 1; const a = 2'), null)
   t.match(compile('export const a = 1; const b = 2'), {
@@ -103,8 +103,7 @@ test('const', t => {
     },
     exports: {
       a: { expr: { value: 1 } }
-    },
-    defaultExport: null
+    }
   })
   t.match(compile('export const a = 1 | 2'), {
     env: {
@@ -142,34 +141,38 @@ test('const with comments', t => {
 
 test('object', t => {
   t.match(compile('{}'), {
-    defaultExport: {
-      propertyList: []
+    exports: {
+      default: { expr: { propertyList: [] } }
     }
   })
   // todo: static analysis
   // t.match(compile('{ a: b }'), null)
   t.match(compile('{ "a": "b" }'), {
-    defaultExport: {
-      propertyList: [
-        {
-          name: { value: 'a' },
-          value: { value: 'b' }
-        }
-      ]
+    exports: {
+      default: { expr: {
+        propertyList: [
+          {
+            name: { value: 'a' },
+            value: { value: 'b' }
+          }
+        ]
+      }}
     }
   })
   t.match(compile('{ "a": "b", "c": "d" }'), {
-    defaultExport: {
-      propertyList: [
-        {
-          name: { value: 'a' },
-          value: { value: 'b' }
-        },
-        {
-          name: { value: 'c' },
-          value: { value: 'd' }
-        }
-      ]
+    exports: {
+      default: { expr: {
+        propertyList: [
+          {
+            name: { value: 'a' },
+            value: { value: 'b' }
+          },
+          {
+            name: { value: 'c' },
+            value: { value: 'd' }
+          }
+        ]
+      }}
     }
   })
   t.done()
@@ -177,49 +180,59 @@ test('object', t => {
 
 test('valid function call', t => {
   t.match(compile('eq()'), {
-    defaultExport: {
-      // func: { eval: Function, test: Function },
-      args: [
-      ]
+    exports: {
+      default: { expr: {
+        // func: { eval: Function, test: Function },
+        args: [
+        ]
+      }}
     }
   })
   t.match(compile('eq(1)'), {
-    defaultExport: {
-      // func: { eval: Function, test: Function },
-      args: [
-        { value: 1 }
-      ]
+    exports: {
+      default: { expr: {
+        // func: { eval: Function, test: Function },
+        args: [
+          { value: 1 }
+        ]
+      }}
     }
   })
   t.match(compile('eq(1, 2)'), {
-    defaultExport: {
-      // func: { eval: Function, test: Function },
-      args: [
-        { value: 1 },
-        { value: 2 }
-      ]
+    exports: {
+      default: { expr: {
+        // func: { eval: Function, test: Function },
+        args: [
+          { value: 1 },
+          { value: 2 }
+        ]
+      }}
     }
   })
   t.match(compile('closed({})'), {
-    defaultExport: {
-      // func: { eval: Function, test: Function },
-      args: [
-        {
-          propertyList: []
-        }
-      ]
+    exports: {
+      default: { expr: {
+        // func: { eval: Function, test: Function },
+        args: [
+          {
+            propertyList: []
+          }
+        ]
+      }}
     }
   })
   t.match(compile('closed({ "a": 1 })'), {
-    defaultExport: {
-      // func: { eval: Function, test: Function },
-      args: [
-        {
-          propertyList: [
-            { name: { value: 'a' }, value: { value: 1 } }
-          ]
-        }
-      ]
+    exports: {
+      default: { expr: {
+        // func: { eval: Function, test: Function },
+        args: [
+          {
+            propertyList: [
+              { name: { value: 'a' }, value: { value: 1 } }
+            ]
+          }
+        ]
+      }}
     }
   })
   t.done()
@@ -229,27 +242,33 @@ test('let...in', t => {
   // todo: static analysis
   // t.match(compile('let a = 1 in b'), null)
   t.match(compile('let a = 1 in a'), {
-    defaultExport: {
-      env: {
-        a: { expr: { value: 1 } }
-      },
-      body: { id: 'a' }
+    exports: {
+      default: { expr: {
+        env: {
+          a: { expr: { value: 1 } }
+        },
+        body: { id: 'a' }
+      }}
     }
   })
   t.match(compile('const x = 1; let a = x in a'), {
-    defaultExport: {
-      env: {
-        a: { expr: { id: 'x' } }
-      },
-      body: { id: 'a' }
+    exports: {
+      default: { expr: {
+        env: {
+          a: { expr: { id: 'x' } }
+        },
+        body: { id: 'a' }
+      }}
     }
   })
   t.match(compile('export default let a = x in a; const x = 1'), {
-    defaultExport: {
-      env: {
-        a: { expr: { id: 'x' } }
-      },
-      body: { id: 'a' }
+    exports: {
+      default: { expr: {
+        env: {
+          a: { expr: { id: 'x' } }
+        },
+        body: { id: 'a' }
+      }}
     }
   })
   t.done()
@@ -257,19 +276,23 @@ test('let...in', t => {
 
 test('compile file', t => {
   t.match(jsondl.load(require.resolve('./module/test.jsondl')), {
-    defaultExport: {
-      propertyList: [
-        { name: { value: 'name' }},
-        { name: { value: 'age' }}
-      ]
+    exports: {
+      default: { expr: {
+        propertyList: [
+          { name: { value: 'name' }},
+          { name: { value: 'age' }}
+        ]
+      }}
     }
   })
   t.match(jsondl.load(require.resolve('./module/imports.jsondl')), {
-    defaultExport: {
-      propertyList: [
-        { name: { value: 'name' }},
-        { name: { value: 'age' }, value: { id: 'a' }}
-      ]
+    exports: {
+      default: { expr: {
+        propertyList: [
+          { name: { value: 'name' }},
+          { name: { value: 'age' }, value: { id: 'a' }}
+        ]
+      }}
     }
   })
   t.done()

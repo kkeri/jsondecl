@@ -31,10 +31,10 @@
 ## optimization
 
 - eliminate simple identifier renamings
-- protect the default export from multiple evaluation
 
 ## runtime
 
+- verify that declarations are evaluated only once (and also default exports)
 - make the global JS environment accessible from JSONDL?
 - support calling native functions
 - unify the Callable interface?
