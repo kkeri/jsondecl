@@ -1,7 +1,5 @@
 ## refactor
 
-- rename originalName to importName
-
 ## language
 
 - unescape string literals

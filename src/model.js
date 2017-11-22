@@ -30,8 +30,8 @@ export class ImportDeclaration {
 }
 
 export class ImportSpecifier {
-  constructor (originalId, localId) {
-    this.originalId = originalId
+  constructor (exportId, localId) {
+    this.exportId = exportId
     this.localId = localId
   }
 }

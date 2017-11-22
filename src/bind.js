@@ -9,10 +9,7 @@ function compileBuiltins (builtin) {
   const diag = new Diagnostics()
   let decls = Object.create(null)
   for (let b in builtin) {
-    decls[b] = importValue(builtin[b], {
-      originalId: b,
-      moduleSpec: 'builtin'
-    })
+    decls[b] = importValue(builtin[b])
   }
   if (diag.hasError) throw new Error('Error loading builtins')
   return decls
@@ -92,11 +89,11 @@ const bindVisitor = {
     })
     if (!exports) return
     for (let item of node.importList) {
-      if (item.originalId === '*') {
+      if (item.exportId === '*') {
         bc.bind(item.localId, new model.Literal(exports))
       } else {
         bc.bind(item.localId,
-          new model.ImportExpression(exports, item.originalId, node.moduleSpec))
+          new model.ImportExpression(exports, item.exportId, node.moduleSpec))
       }
     }
   },
