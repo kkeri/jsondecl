@@ -19,15 +19,14 @@ function compileBuiltins (builtin) {
 }
 
 class BindContext {
-  constructor (loader, {
+  constructor (loader, modul, {
       diag,
       baseDir = ''
   } = {}) {
     this.loader = loader
+    this.modul = modul
     this.diag = diag
     this.baseDir = baseDir
-    this.exports = {}
-    this.defaultExport = undefined
     this.exportCount = 0
     this.dynamicDepth = 0
     this.env = builtins
@@ -57,13 +56,13 @@ class BindContext {
   export (node, id) {
     this.exportCount++
     if (id) {
-      this.exports[id] = node
+      this.modul.exports[id] = node
     } else {
-      if (this.defaultExport) {
+      if (this.modul.defaultExport) {
         this.diag.error(`duplicate default export`, node)
       } else {
-        this.exports['default'] = node
-        this.defaultExport = node
+        this.modul.exports['default'] = node
+        this.modul.defaultExport = node
       }
     }
   }
@@ -86,7 +85,7 @@ const bindVisitor = {
     }
   },
 
-  Import (node, bc) {
+  ImportDeclaration (node, bc) {
     const exports = importModule(bc.loader, node, {
       diag: bc.diag,
       baseDir: bc.baseDir
@@ -95,23 +94,15 @@ const bindVisitor = {
     for (let item of node.importList) {
       if (item.originalId === '*') {
         bc.bind(item.localId, new model.Literal(exports))
-      } else if (item.originalId in exports) {
-        const value = importValue(exports[item.originalId], {
-          originalId: item.originalId,
-          moduleSpec: node.moduleSpec,
-          diag: bc.diag,
-          importNode: node
-        })
-        bc.bind(item.localId, value)
       } else {
-        bc.diag.error(`${item.originalId}: identifier not defined in module ` +
-          `'${node.moduleSpec}'`, item)
+        bc.bind(item.localId,
+          new model.ImportExpression(exports, item.originalId, node.moduleSpec))
       }
     }
   },
 
-  Export (node, bc) {
-    if (node.body instanceof model.Const) {
+  ExportDeclaration (node, bc) {
+    if (node.body instanceof model.ConstDeclaration) {
       bc.export(node.body, node.body.id)
     } else {
       bc.export(node.body)
@@ -119,7 +110,7 @@ const bindVisitor = {
     bind(node.body, bc)
   },
 
-  Const (node, bc) {
+  ConstDeclaration (node, bc) {
     if (bc.dynamicDepth === 0) node.env = bc.env
     bc.bind(node.id, node)
     bind(node.body, bc)
@@ -178,9 +169,6 @@ export function bindModule (modul, loader, {
   diag,
   baseDir = ''
 } = {}) {
-  const bc = new BindContext(loader, { diag, baseDir })
+  const bc = new BindContext(loader, modul, { diag, baseDir })
   bind(modul, bc)
-  if (diag.hasError) return
-  modul.exports = bc.exports
-  modul.defaultExport = bc.defaultExport
 }

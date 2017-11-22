@@ -3,6 +3,7 @@
 const test = require('tap').test
 const jsondl = require('../lib/index')
 const model = require('../lib/model')
+const RuntimeError = require('../lib/diag').RuntimeError
 
 function compile (str) {
   const messages = []
@@ -96,6 +97,14 @@ test('namespace import', t => {
   t.done()
 })
 
+test('undefined import', t => {
+  t.throws(function () {
+    compile('import { nondef } from "./module/test.js"; nondef').test(1)
+  }, RuntimeError)
+  t.match(compile('import { undef } from "./module/test.js"; undef').test(undefined), true)
+  t.done()
+})
+
 test('import list', t => {
   t.match(compile('import { } from "./module/test.js"; 1'), {
     env: {
@@ -103,38 +112,47 @@ test('import list', t => {
   })
   t.match(compile('import { a } from "./module/test.js"; 1'), {
     env: {
-      a: { value: 3 }
+      a: { }
     }
   })
   t.match(compile('import { a, b } from "./module/test.js"; 1'), {
     env: {
-      a: { value: 3 },
-      b: { value: 99 }
+      a: { },
+      b: { }
     }
   })
   t.match(compile('import { regex } from "./module/test.js"; 1'), {
     env: {
-      regex: { regexp: RegExp }
+      regex: { }
     }
   })
-  t.match(compile('import { nondef } from "./module/test.js"; 1'), null)
-  t.match(compile('import { undef } from "./module/test.js"; 1'), null)
-  t.match(compile('import { a, a } from "./module/test.js"; 1'), null)
-  t.match(compile('import { a } from "./module/nofile.js"; 1'), null)
+  // t.match(compile('import { a, a } from "./module/test.js"; 1'), null)
+  t.match(compile('import { a } from "./module/nofile.js"; a'), null)
   t.done()
 })
 
 test('import rename', t => {
   t.match(compile('import { a as x } from "./module/test.js"; 1'), {
     env: {
-      x: { value: 3 }
+      x: { }
     }
   })
   t.match(compile('import { a as x, b } from "./module/test.js"; 1'), {
     env: {
-      x: { value: 3 },
-      b: { value: 99 }
+      x: { },
+      b: { }
     }
   })
+  t.done()
+})
+
+test('import with remote reference', t => {
+  t.match(compile('import { y } from "./module/imports"; y').test(3), true)
+  t.done()
+})
+
+test('import from mutually dependent modules', t => {
+  t.match(compile('import { a } from "./module/mutual-a"; import { b } from "./module/mutual-b"; [a, b]')
+    .test([1, 2]), true)
   t.done()
 })

@@ -1,0 +1,4 @@
+import { bx } from "./mutual-b"
+
+export const a = bx
+export const ax = 2

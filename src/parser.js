@@ -45,7 +45,7 @@ const modelActions = {
   // import
 
   ImportDeclaration (_imp_, items, _from_, moduleSpec, term) {
-    return new model.Import(moduleSpec.model(), items.model())
+    return new model.ImportDeclaration(moduleSpec.model(), items.model())
   },
   NamedImports_empty (_lbr_, _rbr_) {
     return []
@@ -69,13 +69,13 @@ const modelActions = {
   // export
 
   ExportDeclaration_const (_exp_, _const_) {
-    return new model.Export(_const_.model())
+    return new model.ExportDeclaration(_const_.model())
   },
   ExportDeclaration_default (_exp_, _def_, expr, term) {
-    return new model.Export(expr.model())
+    return new model.ExportDeclaration(expr.model())
   },
   ExportDeclaration_bare (expr, term) {
-    return new model.Export(expr.model())
+    return new model.ExportDeclaration(expr.model())
   },
 
   // const
@@ -87,7 +87,7 @@ const modelActions = {
     return list.asIteration().model()
   },
   DeclarationListItem (id, _eq_, expr) {
-    return new model.Const(id.model(), expr.model())
+    return new model.ConstDeclaration(id.model(), expr.model())
   },
 
   // expression

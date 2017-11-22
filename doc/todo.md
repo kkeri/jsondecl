@@ -12,20 +12,22 @@
 - support full set of ES6 identifiers?
 - verify that JSONDL is superset of JSON (character set compatibility!)
 
-## sets
+## model
 
+- verify that this can't be used as pattern
 - set lifetime should be the same as transaction lifetime
 
 ## modules
 
-- mutual dependency between modules
+- Module.DefaultExport is obsolete
+- import only Expression instance objects without boxing
+  - introduce Thunk for ConstDeclaration just like ImportExpression for imports
 - handle export-import cycles (https://github.com/webpack/webpack/issues/1788)
 - custom module resolver can be passed on Loader construction
 
 ## compiler
 
 - precise error reporting from the parser (report multiple errors)
-- warning: cardinality defined on empty array pattern
 - handle error location
 - static evaluation as compilation and optimization technique
 - dynamic cardinality?
@@ -37,6 +39,10 @@
 
 ## runtime
 
+- make the global JS environment accessible from JSONDL?
+- support calling native functions
+- unify the Callable interface?
+- warning: cardinality defined on empty array pattern
 - assign stack trace to runtime errors
 
 ## diagnostics

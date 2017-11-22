@@ -24,7 +24,8 @@ export function importModule (loader, importNode, {
     case '':
     case '.json':
     case '.jsondl':
-      return loader.load(modulePath, { diag }).exports
+      let modul = loader.load(modulePath, { diag })
+      return modul ? modul.exports : null
     case '.js':
       try {
         return require(modulePath)
@@ -41,18 +42,7 @@ export function importModule (loader, importNode, {
   }
 }
 
-/**
- * Creates a declaration from an imported value.
- * @param {*} value value to be imported
- * @param {string} originalId foreign id of the imported element
- * @param {string} moduleSpec foreign module name for diagnostics
- */
-export function importValue (value, {
-  originalId,
-  moduleSpec,
-  diag,
-  importNode
-}) {
+export function importValue (value) {
   switch (typeof value) {
     case 'function':
       return new model.NativePattern(value)
@@ -60,20 +50,11 @@ export function importValue (value, {
       if (value instanceof RegExp) {
         return model.RegExp_.fromRegExp(value)
       } else if (Array.isArray(value)) {
-        diag.error(`${originalId} imported from '${moduleSpec}': ` +
-          `can't import an array`, importNode)
-        return new model.Expression()
+        return new model.Literal(value)
       } else {
         return value
       }
-    case 'number':
-    case 'string':
-    case 'null':
-    case 'boolean':
-      return new model.Literal(value)
     default:
-      diag.error(`${originalId} imported from '${moduleSpec}' has ` +
-        `illegal type '${typeof value}'`, importNode)
-      return new model.Expression()
+      return new model.Literal(value)
   }
 }

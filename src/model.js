@@ -1,5 +1,6 @@
 import { RuntimeContext } from './runtime'
 import { TransactionalMap } from './map'
+import { importValue } from './import'
 import { RuntimeError } from './diag'
 
 export class Module {
@@ -21,7 +22,7 @@ export class Module {
   }
 }
 
-export class Import {
+export class ImportDeclaration {
   constructor (moduleSpec, importList) {
     this.moduleSpec = moduleSpec
     this.importList = importList
@@ -35,13 +36,13 @@ export class ImportSpecifier {
   }
 }
 
-export class Export {
+export class ExportDeclaration {
   constructor (body) {
     this.body = body
   }
 }
 
-export class Const {
+export class ConstDeclaration {
   constructor (id, body) {
     this.id = id
     this.body = body
@@ -50,13 +51,15 @@ export class Const {
   eval (rc) {
     if (!('value' in this)) {
       if (this.busy) {
-        throw new RuntimeError('Circular reference detected', this, 'CIRCULAR-REF')
+        throw new RuntimeError('Circular reference detected', this, 'CIRCULAR_REF')
       }
       this.busy = true
+      const savedEnv = rc.env
       try {
+        if (this.env) rc.env = this.env
         this.value = this.body.eval(rc)
       } catch (e) {
-        if (e instanceof RuntimeError && e.code === 'CIRCULAR-REF' && e.ref) {
+        if (e instanceof RuntimeError && e.code === 'CIRCULAR_REF' && e.ref) {
           // todo: remove this when stack traces are implemented
           rc.diag.error(`circular reference detected while evaluating const '${this.id}'`)
           if (e.ref === this) e.ref = null
@@ -64,6 +67,7 @@ export class Const {
         throw e
       } finally {
         this.busy = false
+        rc.env = savedEnv
       }
     }
     return this.value
@@ -109,6 +113,23 @@ export class Expression {
 
   getName () {
     return this.alias || (this.constructor && this.constructor.name) || 'expression'
+  }
+}
+
+export class ImportExpression extends Expression {
+  constructor (exports, exportId, targetName) {
+    super()
+    this.exports = exports
+    this.exportId = exportId
+    this.targetName = targetName
+  }
+
+  eval (rc) {
+    if (!(this.exportId in this.exports)) {
+      throw new RuntimeError(`${this.exportId} is not exported by module ` +
+      `'${this.targetName}'`, this, 'NOT_EXPORTED')
+    }
+    return importValue(this.exports[this.exportId]).eval(rc)
   }
 }
 
@@ -206,7 +227,7 @@ export class Reference extends Expression {
     const target = rc.env[this.id]
     if (!target) {
       throw new RuntimeError(`undefined identifier '${this.id}'`,
-        this, 'UNDEFINED-ID')
+        this, 'UNDEFINED_ID')
     }
     return target.eval(rc)
   }
