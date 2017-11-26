@@ -1,6 +1,6 @@
 {
   "name": "jsondl",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "A JSON declaration language",
   "main": "lib/index.js",
   "scripts": {
