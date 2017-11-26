@@ -9,6 +9,7 @@ export class RuntimeContext {
     this.pathStack = []
     this.tr = {
       matchSet: null,
+      arrayMatchLimit: 0,
       modifiedSets: []
     }
   }
@@ -23,23 +24,25 @@ export class RuntimeContext {
   }
 
   commit () {
-    for (let set of this.tr.modifiedSets) {
+    const tr = this.tr
+    for (let set of tr.modifiedSets) {
       set.commit()
     }
-    let topMatchSet = this.tr.matchSet
+    let topMatchSet = tr.matchSet
     if (topMatchSet) {
-      let prevMatchSet = this.tr.prev.matchSet
+      let prevMatchSet = tr.prev.matchSet
       for (let name in topMatchSet) prevMatchSet[name] = true
     }
-    this.tr.prev.arrayMatchLimit =
-      Math.max(this.tr.prev.arrayMatchLimit, this.tr.arrayMatchLimit)
-    this.tr = this.tr.prev
+    tr.prev.arrayMatchLimit =
+      Math.max(tr.prev.arrayMatchLimit, tr.arrayMatchLimit)
+    this.tr = tr.prev
   }
 
   rollback () {
-    for (let set of this.tr.modifiedSets) {
+    const tr = this.tr
+    for (let set of tr.modifiedSets) {
       set.rollback()
     }
-    this.tr = this.tr.prev
+    this.tr = tr.prev
   }
 }

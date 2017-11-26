@@ -32,7 +32,7 @@ export class Diagnostics {
   }
 
   appendTo (other) {
-    other.list = other.list.concat(this.messages)
+    other.messages = other.messages.concat(this.messages)
     other.hasError = other.hasError || this.hasError
   }
 
@@ -40,11 +40,11 @@ export class Diagnostics {
     Diagnostics.log(this.messages)
   }
 
-  static log (list) {
-    if (list.length === 0) {
+  static log (messages) {
+    if (messages.length === 0) {
       console.log('Ok.')
     } else {
-      for (var diag of list) {
+      for (var diag of messages) {
         console.log(diag.message)
       }
     }
