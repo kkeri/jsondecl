@@ -18,7 +18,6 @@
 
 ## modules
 
-- handle export-import cycles (https://github.com/webpack/webpack/issues/1788)
 - custom module resolver can be passed on Loader construction
 
 ## compiler

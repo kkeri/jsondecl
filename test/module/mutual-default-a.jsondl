@@ -1,0 +1,4 @@
+import b from "./mutual-default-b"
+
+export default "a"
+export const bInA = b

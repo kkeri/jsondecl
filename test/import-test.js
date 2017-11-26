@@ -156,3 +156,11 @@ test('import from mutually dependent modules', t => {
     .test([1, 2]), true)
   t.done()
 })
+
+test('import default from mutually dependent modules', t => {
+  t.match(compile('import a from "./module/mutual-default-a"; import b from "./module/mutual-default-b"; [a, b]')
+  .test(['a', 'b']), true)
+  t.match(compile('import { bInA } from "./module/mutual-default-a"; import { aInB } from "./module/mutual-default-b"; [aInB, bInA]')
+  .test(['a', 'b']), true)
+t.done()
+})
