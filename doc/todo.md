@@ -2,19 +2,25 @@
 
 ## language
 
+- property without value, with any cardinality (not only -)
 - unescape string literals
+- replace const with let?
 - support functions
 - support all forms of ES6 import
 - exclusive or combinator (oneOf)
 - support single quoted strings?
+- dynamic cardinality?
 - support full set of ES6 identifiers?
 - verify that JSONDL is superset of JSON (character set compatibility!)
 
 ## model
 
+- define a separate model class for property patterns whose key is a string 
+- declaration expressions must have their own validate methods
 - clarify evaluation strategy of strict compound objects (no eval in test)
 - verify that this can't be used as pattern
 - set lifetime should be the same as transaction lifetime
+- default set assigned to properties, array items
 
 ## modules
 
@@ -22,10 +28,8 @@
 
 ## compiler
 
-- precise error reporting from the parser (report multiple errors)
 - handle error location
 - static evaluation as compilation and optimization technique
-- dynamic cardinality?
 
 ## optimization
 
@@ -33,23 +37,29 @@
 
 ## runtime
 
+- verify that sets behave correctly in case of nested transactions, where not
+  each transaction adds to the set
 - verify that declarations are evaluated only once (and also default exports)
 - make the global JS environment accessible from JSONDL?
 - support calling native functions
 - unify the Callable interface?
-- warning: cardinality defined on empty array pattern
-- assign stack trace to runtime errors
 
 ## diagnostics
 
 - proper diagnostic messages from the parser (using ohm internals)
+- warn if maxCount < minCount
+- warn if maxCount or minCount < 0
+- better presentation of this.value in Literal (at least "" around string values)
+- warning: cardinality defined on empty array pattern
 - assign source location to diagnostic messages
-- validation diagnostics should be transactional
+- assign stack trace to runtime errors
+- full call stack in diagnostic messages
 - custom error formatter (the user may want error messages that refer to the 
   validated data but not to jsondl)
 
 ## native extensions
 
+- numbers must not be infinite or NaN
 - pass rc as a parameter instead of this
 - exception handling when calling native extensions
 - implement errorlevel (warn)
