@@ -17,7 +17,7 @@ export class Module {
       throw new Error(`attempt to validate against the default export but it doesn't exist`)
     }
     let result = this.exports.default.eval(runtime).test(runtime, value)
-    return result && !runtime.diag.hasError
+    return result && !runtime.tr.diag.hasError
   }
 }
 
@@ -118,7 +118,7 @@ export class DeclarationExpression extends Expression {
       } catch (e) {
         if (e instanceof RuntimeError && e.code === 'CIRCULAR_REF' && e.ref) {
           // todo: remove this when stack traces are implemented
-          rc.diag.error(`circular reference detected while evaluating '${this.id}'`)
+          rc.error(`circular reference detected while evaluating '${this.id}'`)
           if (e.ref === this) e.ref = null
         }
         throw e
@@ -149,9 +149,11 @@ export class LocalEnvironment extends Expression {
     } else {
       rc.env = Object.assign(Object.create(rc.env), this.staticEnv)
     }
-    let result = this.body.eval(rc)
-    rc.env = savedEnv
-    return result
+    try {
+      return this.body.eval(rc)
+    } finally {
+      rc.env = savedEnv
+    }
   }
 }
 
@@ -162,16 +164,22 @@ export class OrPattern extends Expression {
   }
 
   test (rc, value) {
+    rc.begin()
     let result = false
     for (let item of this.items) {
       rc.begin()
       if (item.eval(rc).test(rc, value)) {
-        rc.commit()
+        rc.succeed()
         result = true
         // todo: continue iteration only if unique or closed is in effect
       } else {
-        rc.rollback()
+        rc.fail()
       }
+    }
+    if (result) {
+      rc.succeed()
+    } else {
+      rc.fail()
     }
     return result
   }
@@ -203,6 +211,10 @@ export class LogicalNot extends Expression {
     rc.begin()
     var result = !this.expr.eval(rc).test(rc, value)
     rc.rollback()
+    if (!result) {
+      rc.error(this.expr.getName() + ' matches when it must not match',
+        this.expr)
+    }
     return result
   }
 }
@@ -282,71 +294,24 @@ export class NativePattern extends Expression {
 }
 
 export class ObjectPattern extends Expression {
-  constructor (propertyList) {
+  constructor (expr) {
     super()
-    this.propertyList = propertyList
+    this.expr = expr
   }
 
   test (rc, value) {
     if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+      rc.error(`object expected`, this)
       return false
     }
-    rc.pathStack.push('')
-    for (let prop of this.propertyList) {
-      if (!prop.test(rc, value)) return false
+    rc.pathStack.push(undefined)
+    try {
+      return this.expr.eval(rc).test(rc, value)
+    } finally {
+      rc.pathStack.pop()
     }
-    rc.pathStack.pop()
-    return true
   }
 }
-
-export class ArrayPattern extends Expression {
-  constructor (items, minCount = 1, maxCount = 1) {
-    super()
-    this.items = items
-    this.minCount = minCount
-    this.maxCount = maxCount
-  }
-
-  test (rc, value) {
-    if (!Array.isArray(value)) {
-      return false
-    }
-    let prevArrayMatchLimit = rc.tr.arrayMatchLimit
-    let idx = 0
-    let rep = 0
-    rc.pathStack.push(0)
-    while (rep < this.maxCount) {
-      let baseIdx = idx
-      let match
-      [match, idx] = this.testItemsAtIndex(rc, value, idx)
-      if (!match) break
-      rep++
-      if (idx === baseIdx) break
-    }
-    rc.pathStack.pop()
-    if (rep < this.minCount) {
-      return false
-    }
-    rc.tr.arrayMatchLimit = Math.max(prevArrayMatchLimit, idx)
-    return true
-  }
-
-  testItemsAtIndex (rc, value, idx) {
-    let baseIdx = idx
-    for (let item of this.items) {
-      let match
-      [match, idx] = item.testAtIndex(rc, value, idx)
-      if (!match) {
-        rc.pathStack.pop()
-        return [false, baseIdx]
-      }
-    }
-    return [true, idx]
-  }
-}
-
-// helpers
 
 export class PropertyPattern extends Expression {
   constructor (name, value, minCount = 1, maxCount = Infinity) {
@@ -358,62 +323,145 @@ export class PropertyPattern extends Expression {
   }
 
   test (rc, value) {
-    // this is checked in the object pattern
-    // if (typeof value !== 'object' || value === null || Array.isArray(value)) {
-    //   return false
-    // }
     let occurs = 0
-    if (rc.tr.matchSet) {
-      for (let name in value) {
-        rc.pathStack[rc.pathStack.length - 1] = name
-        if (this.name.eval(rc).test(rc, name)) {
+    // if (rc.tr.matchSet) {
+    //   for (let name in value) {
+    //     rc.pathStack[rc.pathStack.length - 1] = name
+    //     rc.begin()
+    //     const matchName = this.name.eval(rc).test(rc, name)
+    //     rc.rollback()
+    //     if (matchName) {
+    //       rc.tr.matchSet[name] = true
+    //       let savedMatchSet = rc.tr.matchSet
+    //       rc.tr.matchSet = null
+    //       const match = this.value.eval(rc).test(rc, value[name])
+    //       rc.tr.matchSet = savedMatchSet
+    //       if (match) {
+    //         occurs++
+    //       } else {
+    //         rc.error(`property name '${name}' matches but its value doesn't`,
+    //           this)
+    //         return false
+    //       }
+    //     }
+    //   }
+    // } else {
+    for (let name in value) {
+      rc.pathStack[rc.pathStack.length - 1] = name
+      rc.begin()
+      const matchName = this.name.eval(rc).test(rc, name)
+      rc.rollback()
+      if (matchName) {
+        let match
+        if (rc.tr.matchSet) {
           rc.tr.matchSet[name] = true
           let savedMatchSet = rc.tr.matchSet
           rc.tr.matchSet = null
-          const match = this.value.eval(rc).test(rc, value[name])
+          match = this.value.eval(rc).test(rc, value[name])
           rc.tr.matchSet = savedMatchSet
-          if (match) {
-            occurs++
-          } else {
-            return false
-          }
+        } else {
+          match = this.value.eval(rc).test(rc, value[name])
         }
-      }
-    } else {
-      for (let name in value) {
-        rc.pathStack[rc.pathStack.length - 1] = name
-        if (this.name.eval(rc).test(rc, name)) {
-          if (this.value.eval(rc).test(rc, value[name])) {
-            occurs++
-          } else {
-            return false
-          }
+        if (match) {
+          occurs++
+        } else {
+          rc.error(`property name '${name}' matches but its value doesn't`, this)
+          return false
         }
       }
     }
-    if (occurs < this.minCount || occurs > this.maxCount) return false
+    // }
+    if (!occurs && this.minCount > 0) {
+      rc.error(`property pattern doesn't match`, this)
+      return false
+    }
+    if (occurs < this.minCount) {
+      rc.error(`property pattern matches too few times (${occurs} instead of ${this.minCount})`,
+        this)
+      return false
+    }
+    if (occurs > this.maxCount) {
+      rc.error(`property pattern matches too many times (${occurs} instead of ${this.maxCount})`,
+      this)
+      return false
+    }
+    return true
+  }
+}
+
+export class ArrayPattern extends Expression {
+  constructor (expr) {
+    super()
+    this.expr = expr
+  }
+
+  test (rc, value) {
+    if (!Array.isArray(value)) {
+      rc.error(`array expected`, this)
+      return false
+    }
+    const prevArrayIdx = rc.tr.nextArrayIdx
+    rc.tr.nextArrayIdx = 0
+    rc.pathStack.push(undefined)
+    try {
+      return this.expr.eval(rc).test(rc, value)
+    } finally {
+      rc.pathStack.pop()
+      rc.tr.nextArrayIdx = Math.max(prevArrayIdx, rc.tr.nextArrayIdx)
+    }
+  }
+}
+
+export class RepetitionPattern extends Expression {
+  constructor (expr, minCount = 1, maxCount = 1) {
+    super()
+    this.expr = expr
+    this.minCount = minCount
+    this.maxCount = maxCount
+  }
+
+  test (rc, value) {
+    let rep = 0
+    while (rep < this.maxCount) {
+      rc.begin()
+      let base = rc.tr.nextArrayIdx
+      if (this.expr.eval(rc).test(rc, value)) {
+        rep++
+        let delta = rc.tr.nextArrayIdx - base
+        rc.succeed()
+        if (!delta) break
+      } else {
+        rc.rollback()
+        break
+      }
+    }
+    if (!rep && this.minCount) {
+      rc.error(`pattern doesn't match`, this)
+      return false
+    } else if (rep < this.minCount) {
+      rc.error(`pattern matches too few times (${rep} instead of ${this.minCount})`, this)
+      return false
+    }
     return true
   }
 }
 
 export class ArrayItemPattern extends Expression {
-  constructor (value, minCount = 1, maxCount = 1) {
+  constructor (expr) {
     super()
-    this.value = value
-    this.minCount = minCount
-    this.maxCount = maxCount
+    this.expr = expr
   }
 
-  testAtIndex (rc, value, idx) {
-    let occurs = 0
-    while (occurs < this.maxCount &&
-      idx < value.length && this.value.eval(rc).test(rc, value[idx])
-    ) {
-      idx++
-      occurs++
-      rc.pathStack[rc.pathStack.size - 1] = idx
+  test (rc, value) {
+    let base = rc.tr.nextArrayIdx
+    if (base >= value.length) return false
+    rc.pathStack[rc.pathStack.length - 1] = base
+    if (this.expr.eval(rc).test(rc, value[base])) {
+      rc.tr.nextArrayIdx = base + 1
+      return true
+    } else {
+      return false
     }
-    return [occurs >= this.minCount, idx]
   }
 }
 
@@ -438,7 +486,12 @@ export class Literal extends Expression {
   }
 
   test (rc, value) {
-    return this.value === value
+    if (this.value === value) {
+      return true
+    } else {
+      rc.error(`value is not equal to ${this.value}`, this)
+      return false
+    }
   }
 }
 
@@ -461,7 +514,12 @@ export class RegExp_ extends Expression {
   }
 
   test (rc, value) {
-    return this.regexp.test(value)
+    if (this.regexp.test(value)) {
+      return true
+    } else {
+      rc.error(`value doesn't match ${this.regexp}`, this)
+      return false
+    }
   }
 }
 

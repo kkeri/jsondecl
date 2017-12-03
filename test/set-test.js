@@ -5,8 +5,10 @@ const _compile = require('../lib/index').compile
 const model = require('../lib/model')
 
 function compile (str) {
+  const messages = []
   return _compile(str, {
-    filename: __filename
+    filename: __filename,
+    messages
   })
 }
 
@@ -24,6 +26,46 @@ test('uniqueness', t => {
   .test({ a: 1 }), true)
   t.match(compile('const s = set; { "a": unique(s) } & { "a": unique(s) }')
   .test({ a: 1 }), true)
+
+  t.done()
+})
+
+test('uniqueness2', t => {
+  t.match(compile(`
+    const s = set
+    const t = set
+    { "type": "s", "value": unique(s) } | { "type": "t", "value": unique(t) }
+  `).test({ type: 's', value: 1 }), true)
+  t.match(compile(`
+    const s = set
+    const t = set
+    { "type": "s", "value": unique(s) } | { "type": "t", "value": unique(t) }
+  `).test({ type: 't', value: 1 }), true)
+  t.match(compile(`
+    const s = set
+    const t = set
+    { "type": "s", "value": unique(s) } | { "type": "t", "value": unique(t) }
+  `).test({ type: 'u', value: 1 }), false)
+  t.match(compile(`
+    const s = set
+    const t = set
+    closed([
+      { "type": "s", "value": unique(s) } | { "type": "t", "value": unique(t) }*
+    ])
+  `).test([
+    { type: 's', value: 1 },
+    { type: 't', value: 1 }
+  ]), true)
+  t.match(compile(`
+    const s = set
+    const t = set
+    closed([
+      { "value": unique(s), "type": "s" } | { "value": unique(t), "type": "t" }*
+    ])
+  `).test([
+    { type: 's', value: 1 },
+    { type: 't', value: 1 }
+  ]), true)
 
   t.done()
 })

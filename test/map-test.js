@@ -92,7 +92,7 @@ test('rollback2', t => {
   t.done()
 })
 
-test('commit1', t => {
+test('succeed1', t => {
   let rc = new RuntimeContext()
 
   let map = new TransactionalMap(rc)
@@ -102,14 +102,14 @@ test('commit1', t => {
   t.match(map.has(1), true)
   t.match(map.get(1), 3)
 
-  rc.commit()
+  rc.succeed()
   t.match(map.has(1), true)
   t.match(map.get(1), 3)
 
   t.done()
 })
 
-test('commit2', t => {
+test('succeed2', t => {
   let rc = new RuntimeContext()
 
   let map = new TransactionalMap(rc)
@@ -120,7 +120,7 @@ test('commit2', t => {
   t.match(map.has(1), true)
   t.match(map.get(1), 3)
 
-  rc.commit()
+  rc.succeed()
   t.match(map.has(1), true)
   t.match(map.get(1), 3)
 

@@ -133,22 +133,11 @@ const modelActions = {
   Ref (id) {
     return new model.Reference(id.model())
   },
+
   ObjectPattern (_lb_, props, _rb_) {
-    return new model.ObjectPattern(props.asIteration().model())
+    const all = new model.AndPattern(props.asIteration().model())
+    return new model.ObjectPattern(all)
   },
-  ArrayPattern_cardinality (_lb_, items, _rb_, card) {
-    const c = card.model()
-    return new model.ArrayPattern(items.asIteration().model(), c.low, c.high)
-  },
-  ArrayPattern_default (_lb_, items, _rb_) {
-    return new model.ArrayPattern(items.asIteration().model())
-  },
-  String (str) {
-    return new model.Literal(str.model())
-  },
-
-  // helpers
-
   PropertyPattern_cardinality (name, card, _colon_, value) {
     const c = card.model()
     return new model.PropertyPattern(name.model(), value.model(), c.low, c.high)
@@ -159,6 +148,29 @@ const modelActions = {
   PropertyPattern_deny (name, _dash_) {
     return new model.PropertyPattern(name.model(), new model.Reference('any'), 0, 0)
   },
+
+  ArrayPattern_cardinality (_lb_, items, _rb_, card) {
+    const c = card.model()
+    const all = new model.AndPattern(items.asIteration().model())
+    const rep = new model.RepetitionPattern(all, c.low, c.high)
+    return new model.ArrayPattern(rep)
+  },
+  ArrayPattern_default (_lb_, items, _rb_) {
+    const all = new model.AndPattern(items.asIteration().model())
+    return new model.ArrayPattern(all)
+  },
+  ArrayItemPattern_cardinality (value, card) {
+    const c = card.model()
+    const item = new model.ArrayItemPattern(value.model())
+    return new model.RepetitionPattern(item, c.low, c.high)
+  },
+  ArrayItemPattern_default (value) {
+    return new model.ArrayItemPattern(value.model())
+  },
+  String (str) {
+    return new model.Literal(str.model())
+  },
+
   Cardinality (card) {
     let c = card.model()
     switch (c) {
@@ -169,9 +181,6 @@ const modelActions = {
       default: return c
     }
   },
-  // Natural (nat) {
-  //   return { low: int.model(), high: int.model() }
-  // },
   NumericCardinality_single (_lbr_, int, _rbr_) {
     return { low: int.model(), high: int.model() }
   },
@@ -180,13 +189,6 @@ const modelActions = {
   },
   NumericCardinality_range (_lbr_, low, _dotdot_, high, _rbr_) {
     return { low: low.model(), high: high.model() }
-  },
-  ArrayItemPattern_cardinality (value, card) {
-    const c = card.model()
-    return new model.ArrayItemPattern(value.model(), c.low, c.high)
-  },
-  ArrayItemPattern_default (value) {
-    return new model.ArrayItemPattern(value.model())
   },
 
   // lexical rules

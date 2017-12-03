@@ -6,8 +6,10 @@ const model = require('../lib/model')
 const RuntimeError = require('../lib/diag').RuntimeError
 
 function compile (str) {
+  const messages = []
   return _compile(str, {
-    filename: __filename
+    filename: __filename,
+    messages
   })
 }
 

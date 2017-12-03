@@ -133,12 +133,24 @@ const bindVisitor = {
   },
 
   ObjectPattern (node, bc) {
-    node.propertyList.forEach(i => bind(i, bc))
+    bind(node.expr, bc)
   },
 
   PropertyPattern (node, bc) {
     bind(node.name, bc)
     bind(node.value, bc)
+  },
+
+  ArrayPattern (node, bc) {
+    bind(node.expr, bc)
+  },
+
+  RepetitionPattern (node, bc) {
+    bind(node.expr, bc)
+  },
+
+  ArrayItemPattern (node, bc) {
+    bind(node.expr, bc)
   },
 
   RegExp_ (node, bc) {

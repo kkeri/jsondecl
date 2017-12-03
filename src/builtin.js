@@ -43,12 +43,12 @@ class ClosedPattern extends Expression {
 
   test (rc, value) {
     if (Array.isArray(value)) {
-      let prevArrayMatchLimit = rc.tr.arrayMatchLimit
-      rc.tr.arrayMatchLimit = 0
+      let prevArrayIndex = rc.tr.nextArrayIdx
+      rc.tr.nextArrayIdx = 0
       const match = this.pattern.eval(rc).test(rc, value)
-      let limit = rc.tr.arrayMatchLimit
-      rc.tr.arrayMatchLimit = Math.max(prevArrayMatchLimit, limit)
-      return match && limit === value.length
+      let next = rc.tr.nextArrayIdx
+      rc.tr.nextArrayIdx = Math.max(prevArrayIndex, next)
+      return match && next === value.length
     } else {
       const savedMatchSet = rc.tr.matchSet
       const localMatchSet = {}
