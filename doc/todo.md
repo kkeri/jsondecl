@@ -58,7 +58,6 @@
 
 ## native extensions
 
-- numbers must not be infinite or NaN
 - pass rc as a parameter instead of this
 - exception handling when calling native extensions
 - implement errorlevel (warn)

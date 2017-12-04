@@ -9,7 +9,11 @@ export const boolean = (x) => typeof x === 'boolean'
 
 export const string = (x) => typeof x === 'string'
 
-export const number = (x) => typeof x === 'number'
+export const numeric = (x) => typeof x === 'number'
+
+export const number = (x) => typeof x === 'number' && Number.isFinite(x)
+
+export const finite = (x) => typeof x === 'number' && Number.isFinite(x)
 
 export const integer = (x) => number(x) && Math.floor(x) === x
 
