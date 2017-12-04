@@ -12,6 +12,8 @@ function compile (str, messages) {
   })
 }
 
+// validation errors
+
 test('info', t => {
   let messages = []
   t.match(compile('import { test_info } from "./module/test.js"; test_info')
@@ -54,6 +56,48 @@ test('mixed', t => {
   t.match(messages[2].severity, 'error')
   t.done()
 })
+
+test('closed array', t => {
+  let messages = []
+  t.match(compile(`closed([number])`, messages).test([1, 2], { messages }), false)
+  t.match(messages.length, 1)
+  t.match(messages[0].severity, 'error')
+  t.done()
+})
+
+test('closed object', t => {
+  let messages = []
+  t.match(compile(`closed({ "a" })`, messages).test({ 'a': 1, 'b': 2 }, { messages }), false)
+  t.match(messages.length, 1)
+  t.match(messages[0].severity, 'error')
+  t.done()
+})
+
+test('unique', t => {
+  let messages = []
+  t.match(compile(`unique(1)`, messages).test([1, 1], { messages }), false)
+  t.match(messages.length, 1)
+  t.match(messages[0].severity, 'error')
+  messages = []
+  t.match(compile(`const s = set; [unique(s){2}]`, messages).test([1, 1], { messages }), false)
+  t.match(messages.length, 1)
+  t.match(messages[0].severity, 'error')
+  t.done()
+})
+
+test('elementof', t => {
+  let messages = []
+  t.match(compile(`elementof(1)`, messages).test(1, { messages }), false)
+  t.match(messages.length, 1)
+  t.match(messages[0].severity, 'error')
+  messages = []
+  t.match(compile(`const s = set; elementof(s)`, messages).test(1, { messages }), false)
+  t.match(messages.length, 1)
+  t.match(messages[0].severity, 'error')
+  t.done()
+})
+
+// runtime errors
 
 test('illegal use of expression as pattern', t => {
   t.throws(function () { compile('set').test(1) }, RuntimeError)

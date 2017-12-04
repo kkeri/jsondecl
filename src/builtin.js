@@ -52,7 +52,12 @@ class ClosedPattern extends Expression {
       const match = this.pattern.eval(rc).test(rc, value)
       let next = rc.tr.nextArrayIdx
       rc.tr.nextArrayIdx = Math.max(prevArrayIndex, next)
-      return match && next === value.length
+      if (!match) return false
+      if (next < value.length) {
+        rc.error(`extra array items found (${value.length} instead of ${next})`, this)
+        return false
+      }
+      return true
     } else {
       const savedMatchSet = rc.tr.matchSet
       const localMatchSet = {}
@@ -61,7 +66,10 @@ class ClosedPattern extends Expression {
       rc.tr.matchSet = savedMatchSet
       if (!match) return false
       for (let name in value) {
-        if (!(name in localMatchSet)) return false
+        if (!(name in localMatchSet)) {
+          rc.error(`extra object properties found`, this)
+          return false
+        }
       }
       return true
     }
@@ -73,12 +81,12 @@ export const closed = new ClosedFunction()
 export function unique (value, map) {
   const path = arrayToJsonPath(this.pathStack)
   if (!(map instanceof TransactionalMap)) {
-    // todo: error message
+    this.error(`set argument expected`, this)
     return false
   }
   let prevPath = map.get(value)
   if (prevPath && prevPath !== path) {
-    // todo: error message
+    this.error(`value is not unique in set`, this)
     return false
   }
   map.set(value, path)
@@ -87,8 +95,12 @@ export function unique (value, map) {
 
 export function elementof (value, map) {
   if (!(map instanceof TransactionalMap)) {
-    // todo: error message
+    this.error(`set argument expected`, this)
     return false
   }
-  return map.has(value)
+  if (!map.has(value)) {
+    this.error(`value is not element of set`, this)
+    return false
+  }
+  return true
 }
