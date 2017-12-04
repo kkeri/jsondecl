@@ -138,15 +138,19 @@ const modelActions = {
     const all = new model.AndPattern(props.asIteration().model())
     return new model.ObjectPattern(all)
   },
-  PropertyPattern_cardinality (name, card, _colon_, value) {
+  PropertyPattern_value_card (name, card, _colon_, value) {
     const c = card.model()
     return new model.PropertyPattern(name.model(), value.model(), c.low, c.high)
   },
-  PropertyPattern_default (name, _colon_, value) {
+  PropertyPattern_value (name, _colon_, value) {
     return new model.PropertyPattern(name.model(), value.model())
   },
-  PropertyPattern_deny (name, _dash_) {
-    return new model.PropertyPattern(name.model(), new model.Reference('any'), 0, 0)
+  PropertyPattern_any_card (name, card) {
+    const c = card.model()
+    return new model.PropertyPattern(name.model(), new model.Reference('any'), c.low, c.high)
+  },
+  PropertyPattern_any (name) {
+    return new model.PropertyPattern(name.model(), new model.Reference('any'))
   },
 
   ArrayPattern_cardinality (_lb_, items, _rb_, card) {

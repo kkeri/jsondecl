@@ -89,9 +89,10 @@ JSONDL {
 	// helpers
 
 	PropertyPattern (a property pattern) =
-		| Expression Cardinality ":" Expression -- cardinality
-		| Expression ":" Expression -- default
-		| Expression "-" -- deny
+		| Expression Cardinality ":" Expression -- value_card
+		| Expression ":" Expression -- value
+		| Expression Cardinality -- any_card
+		| Expression -- any
 
 	ArrayItemPattern (an array item pattern) =
 		| Expression Cardinality -- cardinality

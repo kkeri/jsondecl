@@ -226,7 +226,6 @@ test('valid terminator', t => {
 
 test('invalid object', t => {
   t.equal(parse('{'), null)
-  t.equal(parse('{ "a" }'), null)
   t.equal(parse('{ "a" : }'), null)
   t.equal(parse('{ "a": "b", }'), null)
   t.done()
@@ -234,6 +233,7 @@ test('invalid object', t => {
 
 test('valid object', t => {
   t.notEqual(parse('{}'), null)
+  t.notEqual(parse('{ "a" }'), null)
   t.notEqual(parse('{ "a": "b" }'), null)
   t.notEqual(parse('{ a: b }'), null)
   t.notEqual(parse('{ a: b, c: d }'), null)

@@ -14,6 +14,13 @@ function compile (str) {
 }
 
 test('closed object', t => {
+  t.match(compile('closed({ /a/* })').test({}), true)
+  t.match(compile('closed({ /a/* })').test({ b: 1 }), false)
+  t.match(compile('closed({ /a/* })').test({ a: 'x' }), true)
+  t.match(compile('closed({ /a/* })').test({ a: 1 }), true)
+  t.match(compile('closed({ /a/* })').test({ ab: 1, ac: 1 }), true)
+  t.match(compile('closed({ /a/* })').test({ a: 1, b: 1 }), false)
+
   t.match(compile('closed({ "a": 1 })').test({}), false)
   t.match(compile('closed({ "a": 1 })').test({ a: 'x' }), false)
   t.match(compile('closed({ "a": 1 })').test({ b: 1 }), false)

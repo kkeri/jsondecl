@@ -2,7 +2,6 @@
 
 ## language
 
-- property without value, with any cardinality (not only -)
 - unescape string literals
 - replace const with let?
 - support functions
