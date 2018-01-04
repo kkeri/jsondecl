@@ -14,7 +14,6 @@
 
 ## model
 
-- define a separate model class for property patterns whose key is a string 
 - declaration expressions must have their own validate methods
 - clarify evaluation strategy of strict compound objects (no eval in test)
 - verify that this can't be used as pattern
@@ -28,11 +27,12 @@
 ## compiler
 
 - handle error location
-- static evaluation as compilation and optimization technique
 
 ## optimization
 
 - eliminate simple identifier renamings
+- static evaluation as compilation and optimization technique
+- define a separate model class for property patterns whose key is a string 
 
 ## runtime
 
@@ -42,6 +42,7 @@
 - make the global JS environment accessible from JSONDL?
 - support calling native functions
 - unify the Callable interface?
+- optional cycle detection
 
 ## diagnostics
 
@@ -49,19 +50,23 @@
 - warn if maxCount < minCount
 - warn if maxCount or minCount < 0
 - better presentation of this.value in Literal (at least "" around string values)
-- warning: cardinality defined on empty array pattern
+- warning: non-trivial repetition defined on nullable array pattern (without surrounding closed)
 - assign source location to diagnostic messages
 - assign stack trace to runtime errors
 - full call stack in diagnostic messages
 - custom error formatter (the user may want error messages that refer to the 
   validated data but not to jsondl)
 
+## cli
+
+- error messages with filename and json path
+
 ## native extensions
 
-- pass rc as a parameter instead of this
-- exception handling when calling native extensions
-- implement errorlevel (warn)
+- pass rc as a parameter instead of this to native patterns
 - emit diagnostic messages from built in extensions
+- rename unique to uniquein?
+- implement errorlevel (warn)
 
 ## to be decided
 
