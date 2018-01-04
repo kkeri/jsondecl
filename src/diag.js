@@ -41,12 +41,8 @@ export class Diagnostics {
   }
 
   static log (messages) {
-    if (messages.length === 0) {
-      console.log('Ok.')
-    } else {
-      for (var diag of messages) {
-        console.log(diag.message)
-      }
+    for (var diag of messages) {
+      console.log(diag.message)
     }
   }
 }
