@@ -3,6 +3,7 @@
   "version": "0.0.3",
   "description": "A JSON declaration language",
   "main": "lib/index.js",
+  "bin": "lib/cli.js",
   "scripts": {
     "standard": "standard src/*.js",
     "test": "standard src/*.js && tap -J -b test/*.js",
@@ -40,7 +41,8 @@
   "homepage": "https://github.com/kkeri/jsondl#readme",
   "dependencies": {
     "ohm-js": "^0.14",
-    "resolve": "^1.5.0"
+    "resolve": "^1.5.0",
+    "yargs": "^10.0.3"
   },
   "devDependencies": {
     "babel-cli": "^6.24.1",
