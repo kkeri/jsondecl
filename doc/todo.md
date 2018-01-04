@@ -60,6 +60,9 @@
 ## cli
 
 - error messages with filename and json path
+- option: file encoding
+- warn if no command given
+- return with proper result code
 
 ## native extensions
 
