@@ -20,8 +20,8 @@ test('export syntax error', t => {
 })
 
 test('default export', t => {
-  t.match(compile('1').test(1), true)
-  t.match(compile('export default 1').test(1), true)
+  t.match(compile('1').match(1), true)
+  t.match(compile('export default 1').match(1), true)
   t.done()
 })
 
@@ -38,7 +38,7 @@ test('export const default', t => {
 })
 
 test('exported const is available in module', t => {
-  t.match(compile('export const a = 1; a').test(1), true)
+  t.match(compile('export const a = 1; a').match(1), true)
   t.done()
 })
 

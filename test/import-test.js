@@ -72,36 +72,36 @@ test('windows absolute path not found', t => {
 })
 
 test('import jsondl', t => {
-  t.match(compile('import { rgb } from "./module/colors.jsondl"; rgb').test('red'), true)
-  t.match(compile('import { rgb } from "./module/colors"; rgb').test('red'), true)
-  t.match(compile('import { x } from "./module/no-ext-jsondl"; x').test('no-ext'), true)
+  t.match(compile('import { rgb } from "./module/colors.jsondl"; rgb').match('red'), true)
+  t.match(compile('import { rgb } from "./module/colors"; rgb').match('red'), true)
+  t.match(compile('import { x } from "./module/no-ext-jsondl"; x').match('no-ext'), true)
   t.done()
 })
 
 test('import js', t => {
-  t.match(compile('import { a } from "./module/test.js"; a').test(3), true)
-  t.match(compile('import { regex } from "./module/test.js"; regex').test('reg'), true)
-  t.match(compile('import { a as x } from "./module/test.js"; x').test(3), true)
+  t.match(compile('import { a } from "./module/test.js"; a').match(3), true)
+  t.match(compile('import { regex } from "./module/test.js"; regex').match('reg'), true)
+  t.match(compile('import { a as x } from "./module/test.js"; x').match(3), true)
   t.done()
 })
 
 test('import default binding', t => {
-  t.match(compile('import def from "./module/exports"; def').test('default-export'), true)
+  t.match(compile('import def from "./module/exports"; def').match('default-export'), true)
   t.done()
 })
 
 test('namespace import', t => {
-  t.match(compile('import * as all from "./module/exports"; all.default').test('default-export'), true)
-  t.match(compile('import * as all from "./module/exports"; all.a').test(1), true)
-  t.match(compile('import * as all from "./module/exports"; all.b').test(2), true)
+  t.match(compile('import * as all from "./module/exports"; all.default').match('default-export'), true)
+  t.match(compile('import * as all from "./module/exports"; all.a').match(1), true)
+  t.match(compile('import * as all from "./module/exports"; all.b').match(2), true)
   t.done()
 })
 
 test('undefined import', t => {
   t.throws(function () {
-    compile('import { nondef } from "./module/test.js"; nondef').test(1)
+    compile('import { nondef } from "./module/test.js"; nondef').match(1)
   }, RuntimeError)
-  t.match(compile('import { undef } from "./module/test.js"; undef').test(undefined), true)
+  t.match(compile('import { undef } from "./module/test.js"; undef').match(undefined), true)
   t.done()
 })
 
@@ -147,20 +147,20 @@ test('import rename', t => {
 })
 
 test('import with remote reference', t => {
-  t.match(compile('import { y } from "./module/imports"; y').test(3), true)
+  t.match(compile('import { y } from "./module/imports"; y').match(3), true)
   t.done()
 })
 
 test('import from mutually dependent modules', t => {
   t.match(compile('import { a } from "./module/mutual-a"; import { b } from "./module/mutual-b"; [a, b]')
-    .test([1, 2]), true)
+    .match([1, 2]), true)
   t.done()
 })
 
 test('import default from mutually dependent modules', t => {
   t.match(compile('import a from "./module/mutual-default-a"; import b from "./module/mutual-default-b"; [a, b]')
-  .test(['a', 'b']), true)
+  .match(['a', 'b']), true)
   t.match(compile('import { bInA } from "./module/mutual-default-a"; import { aInB } from "./module/mutual-default-b"; [aInB, bInA]')
-  .test(['a', 'b']), true)
+  .match(['a', 'b']), true)
 t.done()
 })

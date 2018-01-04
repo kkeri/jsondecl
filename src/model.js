@@ -9,14 +9,14 @@ export class Module {
     this.exports = {}
   }
 
-  test (value, {
+  match (value, {
     messages,
     runtime = new RuntimeContext(this.env, { messages })
   } = {}) {
     if (!this.exports.default) {
       throw new Error(`attempt to validate against the default export but it doesn't exist`)
     }
-    let result = this.exports.default.eval(runtime).test(runtime, value)
+    let result = this.exports.default.eval(runtime).match(runtime, value)
     return result && !runtime.tr.diag.hasError
   }
 }
@@ -55,7 +55,7 @@ export class Expression {
     return this
   }
 
-  test (rc, value) {
+  match (rc, value) {
     throw new RuntimeError(`${this.getName()} can't be used as pattern`,
       this, 'PATTERN_EXPECTED')
   }
@@ -130,8 +130,8 @@ export class DeclarationExpression extends Expression {
     return this.value
   }
 
-  test (rc, value) {
-    return this.eval(rc).test(rc, value)
+  match (rc, value) {
+    return this.eval(rc).match(rc, value)
   }
 }
 
@@ -163,12 +163,12 @@ export class OrPattern extends Expression {
     this.items = items
   }
 
-  test (rc, value) {
+  match (rc, value) {
     rc.begin()
     let result = false
     for (let item of this.items) {
       rc.begin()
-      if (item.eval(rc).test(rc, value)) {
+      if (item.eval(rc).match(rc, value)) {
         rc.succeed()
         result = true
         // todo: continue iteration only if unique or closed is in effect
@@ -191,9 +191,9 @@ export class AndPattern extends Expression {
     this.items = items
   }
 
-  test (rc, value) {
+  match (rc, value) {
     for (let item of this.items) {
-      if (!item.eval(rc).test(rc, value)) {
+      if (!item.eval(rc).match(rc, value)) {
         return false
       }
     }
@@ -207,9 +207,9 @@ export class LogicalNot extends Expression {
     this.expr = expr
   }
 
-  test (rc, value) {
+  match (rc, value) {
     rc.begin()
-    var result = !this.expr.eval(rc).test(rc, value)
+    var result = !this.expr.eval(rc).match(rc, value)
     rc.rollback()
     if (!result) {
       rc.error(this.expr.getName() + ' matches when it must not match',
@@ -282,13 +282,13 @@ export class NativePattern extends Expression {
     let fn = this.fn
     args = args.map(arg => arg.eval(rc).getNativeValue(rc))
     return new (class extends Expression {
-      test (rc, value) {
+      match (rc, value) {
         return fn.call(rc, value, ...args)
       }
     })()
   }
 
-  test (rc, value) {
+  match (rc, value) {
     return this.fn.call(rc, value)
   }
 }
@@ -299,14 +299,14 @@ export class ObjectPattern extends Expression {
     this.expr = expr
   }
 
-  test (rc, value) {
+  match (rc, value) {
     if (typeof value !== 'object' || value === null || Array.isArray(value)) {
       rc.error(`object expected`, this)
       return false
     }
     rc.pathStack.push(undefined)
     try {
-      return this.expr.eval(rc).test(rc, value)
+      return this.expr.eval(rc).match(rc, value)
     } finally {
       rc.pathStack.pop()
     }
@@ -322,19 +322,19 @@ export class PropertyPattern extends Expression {
     this.maxCount = maxCount
   }
 
-  test (rc, value) {
+  match (rc, value) {
     let occurs = 0
     // if (rc.tr.matchSet) {
     //   for (let name in value) {
     //     rc.pathStack[rc.pathStack.length - 1] = name
     //     rc.begin()
-    //     const matchName = this.name.eval(rc).test(rc, name)
+    //     const matchName = this.name.eval(rc).match(rc, name)
     //     rc.rollback()
     //     if (matchName) {
     //       rc.tr.matchSet[name] = true
     //       let savedMatchSet = rc.tr.matchSet
     //       rc.tr.matchSet = null
-    //       const match = this.value.eval(rc).test(rc, value[name])
+    //       const match = this.value.eval(rc).match(rc, value[name])
     //       rc.tr.matchSet = savedMatchSet
     //       if (match) {
     //         occurs++
@@ -349,7 +349,7 @@ export class PropertyPattern extends Expression {
     for (let name in value) {
       rc.pathStack[rc.pathStack.length - 1] = name
       rc.begin()
-      const matchName = this.name.eval(rc).test(rc, name)
+      const matchName = this.name.eval(rc).match(rc, name)
       rc.rollback()
       if (matchName) {
         let match
@@ -357,10 +357,10 @@ export class PropertyPattern extends Expression {
           rc.tr.matchSet[name] = true
           let savedMatchSet = rc.tr.matchSet
           rc.tr.matchSet = null
-          match = this.value.eval(rc).test(rc, value[name])
+          match = this.value.eval(rc).match(rc, value[name])
           rc.tr.matchSet = savedMatchSet
         } else {
-          match = this.value.eval(rc).test(rc, value[name])
+          match = this.value.eval(rc).match(rc, value[name])
         }
         if (match) {
           occurs++
@@ -395,7 +395,7 @@ export class ArrayPattern extends Expression {
     this.expr = expr
   }
 
-  test (rc, value) {
+  match (rc, value) {
     if (!Array.isArray(value)) {
       rc.error(`array expected`, this)
       return false
@@ -404,7 +404,7 @@ export class ArrayPattern extends Expression {
     rc.tr.nextArrayIdx = 0
     rc.pathStack.push(undefined)
     try {
-      return this.expr.eval(rc).test(rc, value)
+      return this.expr.eval(rc).match(rc, value)
     } finally {
       rc.pathStack.pop()
       rc.tr.nextArrayIdx = Math.max(prevArrayIdx, rc.tr.nextArrayIdx)
@@ -420,12 +420,12 @@ export class RepetitionPattern extends Expression {
     this.maxCount = maxCount
   }
 
-  test (rc, value) {
+  match (rc, value) {
     let rep = 0
     while (rep < this.maxCount) {
       rc.begin()
       let base = rc.tr.nextArrayIdx
-      if (this.expr.eval(rc).test(rc, value)) {
+      if (this.expr.eval(rc).match(rc, value)) {
         rep++
         let delta = rc.tr.nextArrayIdx - base
         rc.succeed()
@@ -452,11 +452,11 @@ export class ArrayItemPattern extends Expression {
     this.expr = expr
   }
 
-  test (rc, value) {
+  match (rc, value) {
     let base = rc.tr.nextArrayIdx
     if (base >= value.length) return false
     rc.pathStack[rc.pathStack.length - 1] = base
-    if (this.expr.eval(rc).test(rc, value[base])) {
+    if (this.expr.eval(rc).match(rc, value[base])) {
       rc.tr.nextArrayIdx = base + 1
       return true
     } else {
@@ -485,7 +485,7 @@ export class Literal extends Expression {
     return this.value
   }
 
-  test (rc, value) {
+  match (rc, value) {
     if (this.value === value) {
       return true
     } else {
@@ -513,7 +513,7 @@ export class RegExp_ extends Expression {
     return this.regexp
   }
 
-  test (rc, value) {
+  match (rc, value) {
     if (this.regexp.test(value)) {
       return true
     } else {

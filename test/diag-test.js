@@ -17,7 +17,7 @@ function compile (str, messages) {
 test('info', t => {
   let messages = []
   t.match(compile('import { test_info } from "./module/test.js"; test_info')
-    .test(1, { messages }), true)
+    .match(1, { messages }), true)
   t.match(messages.length, 1)
   t.match(messages[0].severity, 'info')
   t.match(messages[0].message, 'test_info')
@@ -27,7 +27,7 @@ test('info', t => {
 test('warning', t => {
   let messages = []
   t.match(compile('import { test_warning } from "./module/test.js"; test_warning')
-    .test(1, { messages }), true)
+    .match(1, { messages }), true)
   t.match(messages.length, 1)
   t.match(messages[0].severity, 'warning')
   t.match(messages[0].message, 'test_warning')
@@ -37,7 +37,7 @@ test('warning', t => {
 test('error', t => {
   let messages = []
   t.match(compile('import { test_error } from "./module/test.js"; test_error')
-    .test(1, { messages }), false)
+    .match(1, { messages }), false)
   t.match(messages.length, 1)
   t.match(messages[0].severity, 'error')
   t.match(messages[0].message, 'test_error')
@@ -49,7 +49,7 @@ test('mixed', t => {
   t.match(compile(`
     import { test_info, test_warning, test_error } from "./module/test.js"
     test_info & test_warning & test_error
-  `, messages).test(1, { messages }), false)
+  `, messages).match(1, { messages }), false)
   t.match(messages.length, 3)
   t.match(messages[0].severity, 'info')
   t.match(messages[1].severity, 'warning')
@@ -59,7 +59,7 @@ test('mixed', t => {
 
 test('closed array', t => {
   let messages = []
-  t.match(compile(`closed([number])`, messages).test([1, 2], { messages }), false)
+  t.match(compile(`closed([number])`, messages).match([1, 2], { messages }), false)
   t.match(messages.length, 1)
   t.match(messages[0].severity, 'error')
   t.done()
@@ -67,7 +67,7 @@ test('closed array', t => {
 
 test('closed object', t => {
   let messages = []
-  t.match(compile(`closed({ "a" })`, messages).test({ 'a': 1, 'b': 2 }, { messages }), false)
+  t.match(compile(`closed({ "a" })`, messages).match({ 'a': 1, 'b': 2 }, { messages }), false)
   t.match(messages.length, 1)
   t.match(messages[0].severity, 'error')
   t.done()
@@ -75,11 +75,11 @@ test('closed object', t => {
 
 test('unique', t => {
   let messages = []
-  t.match(compile(`unique(1)`, messages).test([1, 1], { messages }), false)
+  t.match(compile(`unique(1)`, messages).match([1, 1], { messages }), false)
   t.match(messages.length, 1)
   t.match(messages[0].severity, 'error')
   messages = []
-  t.match(compile(`const s = set; [unique(s){2}]`, messages).test([1, 1], { messages }), false)
+  t.match(compile(`const s = set; [unique(s){2}]`, messages).match([1, 1], { messages }), false)
   t.match(messages.length, 1)
   t.match(messages[0].severity, 'error')
   t.done()
@@ -87,11 +87,11 @@ test('unique', t => {
 
 test('elementof', t => {
   let messages = []
-  t.match(compile(`elementof(1)`, messages).test(1, { messages }), false)
+  t.match(compile(`elementof(1)`, messages).match(1, { messages }), false)
   t.match(messages.length, 1)
   t.match(messages[0].severity, 'error')
   messages = []
-  t.match(compile(`const s = set; elementof(s)`, messages).test(1, { messages }), false)
+  t.match(compile(`const s = set; elementof(s)`, messages).match(1, { messages }), false)
   t.match(messages.length, 1)
   t.match(messages[0].severity, 'error')
   t.done()
@@ -100,14 +100,14 @@ test('elementof', t => {
 // runtime errors
 
 test('illegal use of expression as pattern', t => {
-  t.throws(function () { compile('set').test(1) }, RuntimeError)
+  t.throws(function () { compile('set').match(1) }, RuntimeError)
 
   t.done()
 })
 
 test('illegal call', t => {
   t.throws(function () {
-    compile('const x = 1; x()').test(1) 
+    compile('const x = 1; x()').match(1) 
   }, RuntimeError)
 
   t.done()
@@ -115,7 +115,7 @@ test('illegal call', t => {
 
 test('illegal property ref', t => {
   t.throws(function () {
-    compile('const x = 1; x.a').test(1) 
+    compile('const x = 1; x.a').match(1) 
   }, RuntimeError)
 
   t.done()
@@ -123,7 +123,7 @@ test('illegal property ref', t => {
 
 test('illegal argument to native pattern', t => {
   t.throws(function () {
-    compile('lt({})').test(1) 
+    compile('lt({})').match(1) 
   }, RuntimeError)
 
   t.done()
@@ -131,7 +131,7 @@ test('illegal argument to native pattern', t => {
 
 test('illegal reference', t => {
   t.throws(function () {
-    compile('a').test(1) 
+    compile('a').match(1) 
   }, RuntimeError)
 
   t.done()
@@ -139,7 +139,7 @@ test('illegal reference', t => {
 
 test('no standard object prototype', t => {
   t.throws(function () {
-    compile('toString').test(1) 
+    compile('toString').match(1) 
   }, RuntimeError)
 
   t.done()

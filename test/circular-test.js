@@ -13,13 +13,13 @@ function compile (str) {
 }
 
 test('on-demand', t => {
-  t.match(compile('const a = b; const b = a; 1').test(1), true)
+  t.match(compile('const a = b; const b = a; 1').match(1), true)
   t.done()
 })
 
 test('single global', t => {
   let messages = []
-  t.throws(() => compile('const a = a; a').test(1, { messages }), RuntimeError)
+  t.throws(() => compile('const a = a; a').match(1, { messages }), RuntimeError)
   t.match(messages.length, 1)
   t.ok(/'a'/.test(messages[0].message))
   t.done()
@@ -27,7 +27,7 @@ test('single global', t => {
 
 test('two globals', t => {
   let messages = []
-  t.throws(() => compile('const a = b; const b = a; a').test(1, { messages }), RuntimeError)
+  t.throws(() => compile('const a = b; const b = a; a').match(1, { messages }), RuntimeError)
   t.match(messages.length, 2)
   t.ok(/'b'/.test(messages[0].message))
   t.ok(/'a'/.test(messages[1].message))
@@ -36,7 +36,7 @@ test('two globals', t => {
 
 test('single local', t => {
   let messages = []
-  t.throws(() => compile('let a = a in a').test(1, { messages }), RuntimeError)
+  t.throws(() => compile('let a = a in a').match(1, { messages }), RuntimeError)
   t.match(messages.length, 1)
   t.ok(/'a'/.test(messages[0].message))
   t.done()
@@ -44,7 +44,7 @@ test('single local', t => {
 
 test('two locals', t => {
   let messages = []
-  t.throws(() => compile('let a = b, b = a in a').test(1, { messages }), RuntimeError)
+  t.throws(() => compile('let a = b, b = a in a').match(1, { messages }), RuntimeError)
   t.match(messages.length, 2)
   t.ok(/'b'/.test(messages[0].message))
   t.ok(/'a'/.test(messages[1].message))
