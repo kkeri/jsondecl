@@ -13,6 +13,7 @@ yargs
   })
   .demandCommand(1, 'Please specify command.')
   .help()
+  .parse()
 
 function MatchFiles (declfile, files) {
   if (!existsSync(declfile)) {
@@ -53,8 +54,6 @@ function matchFile (decl, filename) {
   try {
     return decl.match(json, { messages, filename })
   } finally {
-    if (messages.length) {
-      Diagnostics.log(messages)
-    }
+    Diagnostics.log(messages)
   }
 }
